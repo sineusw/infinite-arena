@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Infinite Arena · Payment</title>
+<style>
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#07080f;color:#e8ebff;font:600 17px Inter,system-ui,sans-serif;text-align:center;padding:24px;box-sizing:border-box}
+h1{font:900 26px system-ui;margin:0 0 10px;color:#3dff9a}h1.bad{color:#ff8ad8}
+a{color:#34e7ff}
+</style>
+</head>
+<body>
+<div><h1 id="t">Checking your payment…</h1><p id="s"></p></div>
+<script>
+(async function(){
+ const q=new URLSearchParams(location.search),t=document.getElementById('t'),s=document.getElementById('s');
+ const send=msg=>{
+  if(window.opener&&!window.opener.closed){try{window.opener.postMessage(msg,location.origin)}catch(e){}setTimeout(()=>window.close(),1200);return true}
+  try{localStorage.setItem('ia_pending',JSON.stringify(msg))}catch(e){}
+  setTimeout(()=>location.replace('/'),1500);return false};
+ if(q.get('cancel')){t.textContent='Payment canceled';t.className='bad';s.textContent='No charge was made.';send({type:'ia-cancel'});return}
+ try{
+  const r=await fetch('/api/verify?sid='+encodeURIComponent(q.get('sid')||''),{cache:'no-store'}),j=await r.json();
+  if(!j.paid)throw new Error(j.error||'Payment not completed');
+  t.textContent='✅ Payment complete!';s.textContent='Taking you back to the game…';
+  send({type:'ia-paid',item:j.item,sid:j.sid});
+ }catch(e){t.textContent='Payment not confirmed';t.className='bad';s.innerHTML='If you were charged, email sineusw@gmail.com. <a href="/">Back to the game</a>';send({type:'ia-cancel'})}
+})();
+</script>
+</body>
+</html>

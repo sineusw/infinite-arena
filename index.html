@@ -1001,7 +1001,24 @@ function gameOver(){
 let adTimer=null;
 const MAX_LIVES=5;
 let dpOk=null;
-function demoBuy(item,price,onOk){dpOk=onOk;$('#dpItem').textContent=item;$('#dpPrice').textContent=price;$('#dpPay').disabled=false;$('#dpPay').textContent='PAY (DEMO)';$('#demoPay').classList.remove('hidden')}
+/* real payments (own website): Stripe Checkout in a popup so the run stays alive */
+let payWait=null;const usedSids=new Set((()=>{try{return JSON.parse(lsGet('ia_sids')||'[]')}catch(e){return[]}})());
+function grantSid(sid){if(!sid||usedSids.has(sid))return false;usedSids.add(sid);lsSet('ia_sids',JSON.stringify([...usedSids].slice(-200)));return true}
+function setPayNote(t){$('#revNote').textContent=t;$('#shopNote').textContent=t}
+function grantItem(id){const m=/^(skin|theme)_(\w+)$/.exec(id||'');if(!m)return;const list=m[1]==='skin'?prof.skins:prof.themes;if(!list.includes(m[2]))list.push(m[2]);if(m[1]==='skin')prof.skin=m[2];else{prof.theme=m[2];applyTheme()}saveProf()}
+async function realBuy(id,onOk){
+ const w=window.open('','ia_pay','width=480,height=740');payWait={id,onOk};setPayNote('Opening secure checkout…');
+ try{const r=await fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({item:id})}),j=await r.json();if(!r.ok||!j.url)throw new Error(j.error||'Checkout is unavailable right now.');
+  if(w&&!w.closed){w.location.href=j.url;setPayNote('Finish paying in the checkout window.')}
+  else if(id.indexOf('hearts')===0){payWait=null;setPayNote('Allow pop-ups for this site to buy hearts during a run.')}
+  else location.href=j.url}
+ catch(e){try{if(w)w.close()}catch(_){}payWait=null;setPayNote('⚠ '+e.message)}
+}
+addEventListener('message',e=>{const d=e.data;if(e.origin!==location.origin||!d)return;
+ if(d.type==='ia-cancel'){payWait=null;setPayNote('Payment canceled. No charge was made.');return}
+ if(d.type==='ia-paid'&&payWait&&d.item===payWait.id&&grantSid(d.sid)){const f=payWait.onOk;payWait=null;snd('coin');snd('fanfare');buzz([30,40,30,40,80]);f()}});
+setTimeout(()=>{try{const p=JSON.parse(lsGet('ia_pending')||'null');if(!p)return;localStorage.removeItem('ia_pending');if(p.type==='ia-paid'&&grantSid(p.sid)){grantItem(p.item);snd('coin')}}catch(e){}},0);
+function demoBuy(item,price,onOk,id){if(webMode&&id){realBuy(id,onOk);return}dpOk=onOk;$('#dpItem').textContent=item;$('#dpPrice').textContent=price;$('#dpPay').disabled=false;$('#dpPay').textContent='PAY (DEMO)';$('#demoPay').classList.remove('hidden')}
 $('#dpCancel').onclick=()=>{dpOk=null;$('#demoPay').classList.add('hidden')};
 $('#dpPay').onclick=()=>{const f=dpOk;if(!f)return;dpOk=null;$('#dpPay').disabled=true;$('#dpPay').textContent='Processing…';setTimeout(()=>{$('#demoPay').classList.add('hidden');snd('coin');snd('fanfare');buzz([30,40,30,40,80]);f()},900)};
 function showRevive(){
@@ -1011,7 +1028,7 @@ function showRevive(){
  $('#revTag').textContent=used?(G.mode==='daily'?'You already used your video revive. In the Daily Challenge you can\u2019t buy hearts.':'You already used your video revive this run. You can still buy hearts.'):'Watch a short video to come back with 1 heart and keep your score.';
  $('#revive').classList.remove('hidden');
 }
-document.querySelectorAll('#revOpts .usdb').forEach(b=>b.onclick=()=>{const n=+b.dataset.h,price=b.textContent.replace(/^.*\$/,'$');demoBuy(n+' heart'+(n>1?'s':'')+' · revive now',price,()=>{revive(n,true)})});
+document.querySelectorAll('#revOpts .usdb').forEach(b=>b.onclick=()=>{const n=+b.dataset.h,price=b.textContent.replace(/^.*\$/,'$');demoBuy(n+' heart'+(n>1?'s':'')+' · revive now',price,()=>{revive(n,true)},'hearts'+n)});
 $('#watchAd').onclick=()=>{
  G.adUsed=true;$('#revOpts').classList.add('hidden');$('#noRow').classList.add('hidden');$('#adBox').classList.remove('hidden');
  let n=10;$('#adCount').textContent='Reviving in '+n+'…';clearInterval(adTimer);
@@ -1598,7 +1615,7 @@ function renderUpgrades(grid){
  });
  $('#shopNote').textContent=$('#shopNote').textContent||'Upgrades are permanent and work in every mode except the Daily Challenge.';
 }
-function usdBtn(price,name,onOk){const u=el('button','usd',price);u.onclick=()=>demoBuy(name,price,onOk);return u}
+function usdBtn(price,name,onOk,id){const u=el('button','usd',price);u.onclick=()=>demoBuy(name,price,onOk,id);return u}
 function renderShop(){
  renderCoins();
  const grid=$('#shopGrid');grid.innerHTML='';
@@ -1619,7 +1636,7 @@ function renderShop(){
   else if(have){b.textContent='Equip';b.onclick=()=>{equip();saveProf();renderShop()}}
   else if(it.special){b.textContent='🏆 Weekly top 3 only';b.disabled=true;b.style.opacity=.6}
   else{b.className='buy';b.textContent='🌙 '+it.price;b.disabled=prof.coins<it.price;b.onclick=()=>{if(prof.coins<it.price)return;prof.coins-=it.price;owned.push(k);equip();saveProf();snd('level');$('#shopNote').textContent='';renderShop()};
-   bt.appendChild(usdBtn(it.usd||'$0.99',it.name+(skins?' skin':' color pack'),()=>{if(!owned.includes(k))owned.push(k);equip();saveProf();$('#shopNote').textContent='✅ Unlocked '+it.name+' (demo purchase).';renderShop()}))}
+   bt.appendChild(usdBtn(it.usd||'$0.99',it.name+(skins?' skin':' color pack'),()=>{if(!owned.includes(k))owned.push(k);equip();saveProf();$('#shopNote').textContent='✅ Unlocked '+it.name+(webMode?'!':' (demo purchase).');renderShop()},(skins?'skin_':'theme_')+k))}
   bt.appendChild(b);card.appendChild(bt);grid.appendChild(card);
  });
 }
