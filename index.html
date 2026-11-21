@@ -1557,7 +1557,7 @@ function loop(now){
 const nameEl=$('#name');nameEl.value=lsGet('ia_name')||'';
 function playerName(){const n=nameEl.value.replace(/\s+/g,' ').trim().slice(0,16);return n||'Player'}
 $('#play').onclick=()=>{lsSet('ia_name',nameEl.value.trim());nameEl.blur();snd('');startGame(selMode)};
-const GAME_URL='https://claude.ai/artifact/SGaNdgeA7KJhvYpjXTDype';
+const GAME_URL=!window.claude&&/^https?:$/.test(location.protocol)?location.origin:'https://claude.ai/artifact/SGaNdgeA7KJhvYpjXTDype';
 $('#shareBtn').onclick=()=>{
  if(!G)return;const m=G.mode,v=metricOf();
  const what=m==='survival'?'lasted '+fmtTime(v)+' in Survival':m==='boss'?'beat '+G.bossKills+' boss'+(G.bossKills===1?'':'es')+' in Boss Rush':m==='daily'?'scored '+v.toLocaleString()+' on today\u2019s Daily Challenge':'scored '+v.toLocaleString()+' (level '+G.level+')';
@@ -1694,9 +1694,21 @@ function setLbMode(m){
  const changed=m!==lbMode;lbMode=m;renderLbTabs();
  if(changed){rows=[];renderLb();renderMine();subscribe();loadMyDoc(m)}
 }
+/* own-website leaderboard: same calls as the claude.ai db, backed by /api/lb */
+let webMode=false;
+function webId(){let id=lsGet('ia_uid');if(!id||!/^[a-z0-9]{8,32}$/.test(id)){id=Array.from(crypto.getRandomValues(new Uint8Array(16)),b=>(b%36).toString(36)).join('');lsSet('ia_uid',id)}return id}
+function webDb(){
+ const api='/api/lb';
+ const fetchRows=async(col,key,limit)=>{const r=await fetch(api+'?board='+col+(key?'&key='+encodeURIComponent(key):'')+'&limit='+limit,{cache:'no-store'});if(!r.ok)throw new Error('lb');const j=await r.json();return{metadata:{fromCache:false},docs:j.rows.map(x=>({id:x.id,exists:true,data:()=>x}))}};
+ const query=(col,key,limit)=>({where:(f,op,v)=>query(col,v,limit),orderBy:()=>query(col,key,limit),limit:n=>query(col,key,n),get:()=>fetchRows(col,key,limit),
+  onSnapshot(cb,err){let live=true;const run=()=>fetchRows(col,key,limit).then(s=>{if(live)cb(s)},e=>{if(live&&err)err(e)});run();const t=setInterval(()=>{if(!document.hidden)run()},20000);return()=>{live=false;clearInterval(t)}}});
+ return{collection:col=>query(col,null,500),doc:path=>{const[col,id]=path.split('/');return{get:async()=>({exists:false}),set:async d=>{if(col==='data')return;const r=await fetch(api,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({},d,{board:col,id}))});if(!r.ok)throw new Error('post');if(col===BOARDS[lbMode].col)setTimeout(subscribe,300)}}}};
+}
 async function initDb(){
  renderLbTabs();renderMine();renderLb();
- if(!window.claude||!claude.use){setStatus('Leaderboard isn’t available in this view.');return}
+ if(!window.claude||!claude.use){
+  if(!/^https?:$/.test(location.protocol)){setStatus('Leaderboard isn’t available in this view.');return}
+  webMode=true;db=webDb();myId=webId();subscribe();return}
  try{
   db=await claude.use('db');
   const user=await claude.use('user');
