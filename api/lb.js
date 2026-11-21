@@ -47,7 +47,8 @@ export default async function handler(req, res) {
       const best = new Map();
       for (const b of await listAll(`lb/${board}/${k}/`)) {
         const r = parse(b.pathname);
-        if (r && (!best.has(r.id) || best.get(r.id).score < r.score)) best.set(r.id, r);
+        if (r && r.id === 'testclaude0001') { await del(b.url); continue; } // launch smoke-test entry
+        if (r &&(!best.has(r.id) || best.get(r.id).score < r.score)) best.set(r.id, r);
       }
       const n = int(limit, 500) || 500;
       const rows = [...best.values()].sort((a, b) => b.score - a.score).slice(0, n);
