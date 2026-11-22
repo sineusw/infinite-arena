@@ -202,6 +202,22 @@ input:focus{border-color:var(--cyan)}
 }
 @media (max-width:420px){#cb{display:none!important}}
 #petty{position:fixed;left:50%;top:max(12px,env(safe-area-inset-top));transform:translateX(-50%);z-index:9999;max-width:min(92vw,520px);padding:9px 14px;border-radius:14px;background:rgba(10,12,28,.92);border:1px solid var(--line);color:var(--text);font-weight:700;font-size:14px;line-height:1.3;text-align:center;pointer-events:none;box-shadow:0 6px 24px rgba(0,0,0,.5)}#petty::before{content:'🎙️ ' attr(data-who) ': ';color:var(--yellow)}#petty.hidden{display:none}
+
+/* one-screen menu */
+body.onmenu #hud,body.onmenu #info{display:none!important}
+#menu .card h1{font-size:clamp(28px,7.5vw,44px);margin-bottom:14px}#menu .pre{font-size:13px;margin-bottom:4px}
+.mtop{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;font-weight:800;font-size:13px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:#fff}
+#stkPill.gift{background:linear-gradient(90deg,#ffd34d,#ff8a3d);color:#1a1000;border-color:transparent;box-shadow:0 0 16px rgba(255,180,60,.45);animation:cmPulse 1.4s ease-in-out infinite}
+.coinp{color:#ffd34d;border-color:rgba(255,211,77,.35)}
+#menu .modes{grid-template-columns:repeat(3,1fr)}
+#modeDesc{min-height:0;margin:2px 0 10px;font-size:13px}
+.iconrow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.iconrow button{padding:10px 2px 8px;border-radius:14px;border:1px solid var(--line);background:#0b0e1c;color:var(--muted);font-weight:700;font-size:12px}
+.iconrow button i{display:block;font-style:normal;font-size:22px;margin-bottom:3px}
+#menu #claimBtn{display:none!important}
+#menu.fresh .mtop,#menu.fresh .modes,#menu.fresh #modeDesc,#menu.fresh .iconrow,#menu.fresh #menuRank{display:none!important}
+#menu:not(.fresh) .freshOnly{display:none}
 </style>
 <script defer src="/_vercel/insights/script.js"></script>
 </head>
@@ -226,24 +242,36 @@ input:focus{border-color:var(--cyan)}
    <canvas id="cv"></canvas>
    <div class="ov" id="menu">
     <div class="card">
+     <div class="mtop"><button id="stkPill" class="pill"></button><div class="pill coinp" id="menuCoins">🌙 0</div></div>
      <div class="pre">99% IMPOSSIBLE</div>
-     <h1>INFINITE<br>ARENA</h1>
-     <p class="tag" style="margin-bottom:12px">The levels never end. They just get harder.</p>
+     <h1>INFINITE ARENA</h1>
+     <p class="tag freshOnly">The levels never end. They just get harder.</p>
      <button class="vs hidden" id="vsBtn"></button>
-     <label>Game mode</label><div class="modes" id="modes"></div><div id="modeDesc"></div>
+     <div class="modes" id="modes"></div><div id="modeDesc"></div>
      <p class="freshTip">👆 Tap PLAY. A 30-second tutorial shows you everything.</p>
      <button class="big" id="play">PLAY</button>
      <button class="dcard" id="dCard"></button>
      <button class="claim hidden" id="claimBtn"></button>
-     <div class="row2"><button class="sec" id="menuTut">🎓 Tutorial</button><button class="sec" id="menuShop">🛒 Shop</button><button class="sec" id="menuLb">🏆 Board</button></div>
-     <div style="height:16px"></div>
+     <div class="iconrow"><button id="menuShop"><i>🛒</i>Shop</button><button id="menuLb"><i>🏆</i>Board</button><button id="menuMis"><i>📋</i>Missions</button><button id="menuSet"><i>⚙️</i>Settings</button></div>
+     <div class="credit" id="menuRank"></div>
+    </div>
+   </div>
+   <div class="ov hidden" id="misOv">
+    <div class="card">
+     <h2>📋 PROGRESS</h2>
      <div class="pcard" id="pcard"></div>
-     <div class="coins" id="menuCoins">🌙 0 Moon Coins</div>
-     <div class="credit" id="menuRank" style="margin:-6px 0 14px"></div>
      <div class="daily" id="daily"></div>
+     <button class="big" id="misClose">CLOSE</button>
+    </div>
+   </div>
+   <div class="ov hidden" id="setOv">
+    <div class="card">
+     <h2>⚙️ SETTINGS</h2>
      <label for="name">Your name for the leaderboard</label>
      <input id="name" maxlength="16" placeholder="Player" autocomplete="off">
      <div class="toggles"><button id="tSound">🔊 Sound</button><button id="tMusic">🎵 Music</button><button id="tVib">📳 Vibrate</button><button id="tVoice">🗣️ Voice</button><button id="tJoy" class="hidden" style="flex:1.6">🕹️ Joystick</button></div>
+     <button class="sec" id="menuTut" style="width:100%;margin-top:6px">🎓 Replay tutorial</button>
+     <button class="big" id="setClose" style="margin-top:14px">DONE</button>
      <p class="credit">Game idea by Luke</p>
     </div>
    </div>
@@ -446,7 +474,7 @@ function saveProf(){
  if(db&&myId&&profDbOk){const data=JSON.parse(JSON.stringify(prof));profChain=profChain.then(()=>db.doc('data/users/'+myId+'/profile').set(data)).catch(e=>{if(e&&e.code==='invalid_argument')profDbOk=false})}
  renderCoins();
 }
-function renderCoins(){$('#menuCoins').textContent='🌙 '+prof.coins.toLocaleString()+' Moon Coins';$('#coinBal').textContent='🌙 '+prof.coins.toLocaleString()}
+function renderCoins(){$('#menuCoins').textContent='🌙 '+prof.coins.toLocaleString();$('#coinBal').textContent='🌙 '+prof.coins.toLocaleString()}
 function applyTheme(){
  T=THEMES[prof.theme]||THEMES.neon;const r=document.documentElement.style;
  r.setProperty('--bg',T.bg);r.setProperty('--cyan',T.player);r.setProperty('--pink',T.enemy);r.setProperty('--yellow',T.orb);r.setProperty('--pu',T.pu);r.setProperty('--curse',T.curse);
@@ -677,7 +705,7 @@ function spawnPoint(minD,margin,avoid){
  for(let i=0;i<60;i++){x=rnd(margin,W-margin);y=rnd(margin,H-margin);if(dist(x,y,P.x,P.y)>=minD&&(!avoid||dist(x,y,avoid.x,avoid.y)>avoid.r+50))break}
  return{x,y};
 }
-function hideOverlays(){clearInterval(adTimer);try{Petty.adOff()}catch(e){}['#menu','#over','#shop','#prompt','#tutDone','#paused','#revive'].forEach(s=>$(s).classList.add('hidden'))}
+function hideOverlays(){clearInterval(adTimer);if(document.body.classList.contains('onmenu')){document.body.classList.remove('onmenu');setTimeout(resize,0)}try{Petty.adOff()}catch(e){}['#menu','#over','#shop','#prompt','#tutDone','#paused','#revive','#misOv','#setOv'].forEach(s=>$(s).classList.add('hidden'))}
 function startGame(mode){
  try{Petty.leave()}catch(e){}
  mode=MODES[mode]?mode:selMode;
@@ -1200,10 +1228,16 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)togglePause
 $('#pauseBtn').onclick=()=>togglePause();
 $('#resume').onclick=()=>togglePause(false);
 function isFresh(){return !(+(lsGet('ia_g')||0)>0)&&!(prof.xp>0)}
-function menuLine(){const m=$('#msg');m.className='menuLine';m.innerHTML='';const fr=isFresh();$('#menu').classList.toggle('fresh',fr);if(fr){m.appendChild(el('span','','👋 Welcome! Dodge the red, grab the gold.'));const ft=$('.freshTip');if(ft)ft.textContent=lsGet('ia_tut')?'👆 Tap PLAY to start your first run.':'👆 Tap PLAY. A quick tutorial shows you everything.';return}
- const st=(prof.daily&&prof.daily.streak)||0,done=prof.dailyRun===dayStr(),w=el('span','stk');
- w.appendChild(el('i','','🔥'));const t=el('span');t.appendChild(el('b','',st?st+'-day streak':'No streak yet'));
- t.appendChild(el('small','',done?'Daily done. Come back tomorrow!':st?'Play today\u2019s Daily to keep it':'Play today\u2019s Daily to start one'));w.appendChild(t);m.appendChild(w);renderDCard()}
+function menuLine(){const fr=isFresh();$('#menu').classList.toggle('fresh',fr);
+ if(!document.body.classList.contains('onmenu')){document.body.classList.add('onmenu');setTimeout(resize,0)}
+ const ft=$('.freshTip');if(ft)ft.textContent=lsGet('ia_tut')?'👆 Tap PLAY to start your first run.':'👆 Tap PLAY. A quick tutorial shows you everything.';
+ const p=$('#stkPill'),st=(prof.daily&&prof.daily.streak)||0,today=dayStr();
+ if(prof.daily.last!==today){const ns=prof.daily.last===yesterday()?st+1:1;p.className='pill gift';p.textContent='🎁 Claim +'+dailyReward(ns)+' 🌙'+(ns>1?' · Day '+ns:'')}
+ else{p.className='pill';p.textContent=st>1?'🔥 '+st+'-day streak':'🔥 Day 1 · come back tomorrow'}
+ renderDCard()}
+$('#stkPill').onclick=()=>{$('#claimBtn').click();menuLine()};
+$('#menuMis').onclick=()=>{renderPCard();renderDaily();$('#misOv').classList.remove('hidden')};$('#misClose').onclick=()=>$('#misOv').classList.add('hidden');
+$('#menuSet').onclick=()=>$('#setOv').classList.remove('hidden');$('#setClose').onclick=()=>{lsSet('ia_name',nameEl.value.trim());$('#setOv').classList.add('hidden')};
 function dLeft(){const n=new Date(),e=new Date(n.getFullYear(),n.getMonth(),n.getDate()+1),mm=Math.max(1,Math.round((e-n)/6e4));return Math.floor(mm/60)+'h '+(mm%60)+'m'}
 function renderDCard(){const c=$('#dCard');if(!c)return;const t=todayTwist(),done=prof.dailyRun===dayStr(),b=bests.daily;c.innerHTML='';
  const h=el('div','dh');h.append(el('span','','📅 TODAY\u2019S DAILY CHALLENGE'),el('span','','New in '+dLeft()));c.appendChild(h);
@@ -1688,8 +1722,9 @@ function renderPCard(){
 }
 function renderModes(){
  const box=$('#modes');box.innerHTML='';
- Object.keys(MODES).forEach(k=>{const m=MODES[k],b=el('button',k===selMode?'on':'');b.appendChild(el('span','',m.ic));b.append(m.name);b.onclick=()=>{selMode=k;lsSet('ia_mode',k);renderModes();setLbMode(k)};box.appendChild(b)});
- $('#modeDesc').textContent=MODES[selMode].desc+(selMode==='daily'?' Today: '+todayTwist().ic+' '+todayTwist().name+'. '+todayTwist().desc:'');
+ if(selMode==='daily')selMode='classic';
+ Object.keys(MODES).filter(k=>k!=='daily').forEach(k=>{const m=MODES[k],b=el('button',k===selMode?'on':'');b.appendChild(el('span','',m.ic));b.append(m.name);b.onclick=()=>{selMode=k;lsSet('ia_mode',k);renderModes();setLbMode(k)};box.appendChild(b)});
+ $('#modeDesc').textContent=MODES[selMode].desc;
 }
 renderModes();
 function renderVs(){const b=$('#vsBtn');if(!CH){b.classList.add('hidden');return}
