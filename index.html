@@ -185,6 +185,7 @@ input:focus{border-color:var(--cyan)}
  .pausebtn{padding:8px 12px}
 }
 @media (max-width:420px){#cb{display:none!important}}
+#petty{position:fixed;left:50%;top:max(12px,env(safe-area-inset-top));transform:translateX(-50%);z-index:9999;max-width:min(92vw,520px);padding:9px 14px;border-radius:14px;background:rgba(10,12,28,.92);border:1px solid var(--line);color:var(--text);font-weight:700;font-size:14px;line-height:1.3;text-align:center;pointer-events:none;box-shadow:0 6px 24px rgba(0,0,0,.5)}#petty::before{content:'🎙️ Petty: ';color:var(--yellow)}#petty.hidden{display:none}
 </style>
 </head>
 <body>
@@ -221,7 +222,7 @@ input:focus{border-color:var(--cyan)}
      <div class="daily" id="daily"></div>
      <label for="name">Your name for the leaderboard</label>
      <input id="name" maxlength="16" placeholder="Player" autocomplete="off">
-     <div class="toggles"><button id="tSound">🔊 Sound</button><button id="tMusic">🎵 Music</button><button id="tVib">📳 Vibrate</button><button id="tJoy" class="hidden" style="flex:1.6">🕹️ Joystick</button></div>
+     <div class="toggles"><button id="tSound">🔊 Sound</button><button id="tMusic">🎵 Music</button><button id="tVib">📳 Vibrate</button><button id="tVoice">🗣️ Petty</button><button id="tJoy" class="hidden" style="flex:1.6">🕹️ Joystick</button></div>
      <p class="credit">Game idea by Luke</p>
     </div>
    </div>
@@ -473,8 +474,8 @@ function musicTick(){
  }
 }
 const CTL_NAMES={pad:'👆 Touchpad',joy:'🕹️ Joystick',finger:'✋ Finger'};
-function renderToggles(){const tj=$('#tJoy');if(tj)tj.textContent='Controls: '+CTL_NAMES[prof.ctl||'pad'];[['#tSound','sound','🔊 Sound','🔇 Sound'],['#tMusic','music','🎵 Music','🎵 Music'],['#tVib','vib','📳 Vibrate','📳 Vibrate']].forEach(([id,k,on,off])=>{const b=$(id);b.textContent=(prof[k]?on:off)+(prof[k]?' On':' Off');b.classList.toggle('off',!prof[k])})}
-[['#tSound','sound'],['#tMusic','music'],['#tVib','vib']].forEach(([id,k])=>{$(id).onclick=()=>{prof[k]=!prof[k];saveProf();renderToggles();if(k==='vib'&&prof.vib)buzz(40);if(k!=='vib')snd('click')}});
+function renderToggles(){const tj=$('#tJoy');if(tj)tj.textContent='Controls: '+CTL_NAMES[prof.ctl||'pad'];[['#tSound','sound','🔊 Sound','🔇 Sound'],['#tMusic','music','🎵 Music','🎵 Music'],['#tVib','vib','📳 Vibrate','📳 Vibrate'],['#tVoice','voice','🗣️ Petty','🗣️ Petty']].forEach(([id,k,on,off])=>{const b=$(id);b.textContent=(prof[k]?on:off)+(prof[k]?' On':' Off');b.classList.toggle('off',!prof[k])})}
+[['#tSound','sound'],['#tMusic','music'],['#tVib','vib'],['#tVoice','voice']].forEach(([id,k])=>{$(id).onclick=()=>{prof[k]=!prof[k];saveProf();if((k==='sound'||k==='voice')&&!prof[k])try{Petty.stop()}catch(e){}renderToggles();if(k==='vib'&&prof.vib)buzz(40);if(k!=='vib')snd('click')}});
 
 /* ================= DAILY REWARD & MISSIONS ================= */
 function dayStr(d){d=d||new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
@@ -647,8 +648,9 @@ function spawnPoint(minD,margin,avoid){
  for(let i=0;i<60;i++){x=rnd(margin,W-margin);y=rnd(margin,H-margin);if(dist(x,y,P.x,P.y)>=minD&&(!avoid||dist(x,y,avoid.x,avoid.y)>avoid.r+50))break}
  return{x,y};
 }
-function hideOverlays(){clearInterval(adTimer);['#menu','#over','#shop','#prompt','#tutDone','#paused','#revive'].forEach(s=>$(s).classList.add('hidden'))}
+function hideOverlays(){clearInterval(adTimer);try{Petty.adOff()}catch(e){}['#menu','#over','#shop','#prompt','#tutDone','#paused','#revive'].forEach(s=>$(s).classList.add('hidden'))}
 function startGame(mode){
+ try{Petty.leave()}catch(e){}
  mode=MODES[mode]?mode:selMode;
  if(!lsGet('ia_tut')){startTutorial();return}
  G=newG();G.mode=mode;joyShow();resize();P.x=W/2;P.y=H/2;lastHud='';ptr=null;track('games',1);
@@ -1030,9 +1032,10 @@ function showRevive(){
 }
 document.querySelectorAll('#revOpts .usdb').forEach(b=>b.onclick=()=>{const n=+b.dataset.h,price=b.textContent.replace(/^.*\$/,'$');demoBuy(n+' heart'+(n>1?'s':'')+' · revive now',price,()=>{revive(n,true)},'hearts'+n)});
 $('#watchAd').onclick=()=>{
- G.adUsed=true;$('#revOpts').classList.add('hidden');$('#noRow').classList.add('hidden');$('#adBox').classList.remove('hidden');
+ G.adUsed=true;$('#revOpts').classList.add('hidden');$('#noRow').classList.add('hidden');
+ Petty.adBefore(()=>{if(!G||G.phase!=='over'||$('#revive').classList.contains('hidden'))return;$('#adBox').classList.remove('hidden');
  let n=10;$('#adCount').textContent='Reviving in '+n+'…';clearInterval(adTimer);
- adTimer=setInterval(()=>{n--;if(n<=0){clearInterval(adTimer);revive()}else $('#adCount').textContent='Reviving in '+n+'…'},1000);
+ adTimer=setInterval(()=>{n--;if(n<=0){clearInterval(adTimer);revive();Petty.adAfter()}else $('#adCount').textContent='Reviving in '+n+'…'},1000)});
 };
 $('#noRevive').onclick=()=>{$('#revive').classList.add('hidden');finishGame()};
 function revive(n,paid){
@@ -1059,7 +1062,9 @@ function finishGame(){
   $('#xpMsg').textContent='+'+xpGain+' XP'+(after>before?'  ·  🎉 LEVEL UP! Lv '+after+' '+titleFor(after)+' · +'+lvlCoins+' 🌙':'');if(after>before){snd('fanfare');buzz([40,40,40,40,120])}
   $('#shareBtn').textContent='📣 Challenge a friend';$('#shareTxt').classList.add('hidden');renderPCard();
   $('#over').classList.remove('hidden');renderOverRank();
+  const prevBest=bests[mode]?Object.assign({},bests[mode]):null;
   submitScore(mode,metric,G.level,G.bossKills);
+  try{Petty.result(mode,metric,prevBest)}catch(e){}
   if(mode==='classic')submitWeekly(metric,G.level);
  },900);
 }
@@ -1152,7 +1157,7 @@ function togglePause(force){
 document.addEventListener('visibilitychange',()=>{if(document.hidden)togglePause(true)});
 $('#pauseBtn').onclick=()=>togglePause();
 $('#resume').onclick=()=>togglePause(false);
-function toMenu(){R=Math.random;setTimeout(renderPCard,0);setTimeout(renderDaily,0);paused=false;hideOverlays();G=null;C=null;lastChips='';$('#chips').innerHTML='';$('#chase').classList.add('hidden');$('#skipTut').classList.add('hidden');$('#msg').className='';$('#msg').textContent='Welcome to 99% Impossible: Infinite Arena!';lastMsg='';$('#menu').classList.remove('hidden')}
+function toMenu(){try{Petty.leave()}catch(e){}R=Math.random;setTimeout(renderPCard,0);setTimeout(renderDaily,0);paused=false;hideOverlays();G=null;C=null;lastChips='';$('#chips').innerHTML='';$('#chase').classList.add('hidden');$('#skipTut').classList.add('hidden');$('#msg').className='';$('#msg').textContent='Welcome to 99% Impossible: Infinite Arena!';lastMsg='';$('#menu').classList.remove('hidden')}
 $('#quit').onclick=toMenu;$('#overMenu').onclick=toMenu;
 
 /* ================= UPDATE ================= */
@@ -1766,6 +1771,92 @@ async function submitWeekly(score,level){
   if(top.docs.some(d=>d.id===myId)&&!prof.skins.includes('crown')){prof.skins.push('crown');saveProf();$('#postMsg').textContent='👑 You\u2019re top 3 this week! You unlocked the Champion Crown skin!';$('#postMsg').className='good';snd('fanfare');buzz([50,50,50,50,200])}
  }catch(e){}
 }
+/* ================= PETTY (sarcastic commentator, ElevenLabs voice) ================= */
+const Petty=(()=>{
+ const V=1,SILENT='data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+ let L=null,cur=null,unlocked=false,welcomed=false,adLock=false;
+ const au=new Audio();au.preload='auto';const clips=new Map();
+ const st=(()=>{try{return JSON.parse(lsGet('ia_petty')||'null')||{}}catch(e){return{}}})();
+ st.recent=st.recent||{};st.rank=st.rank||{};st.int=st.int||0;st.next=st.next||6;st.upOut=st.upOut||0;st.upIn=st.upIn||0;
+ const save=()=>lsSet('ia_petty',JSON.stringify(st));
+ const on=()=>!!(prof.sound&&prof.voice!==false);
+ const box=document.createElement('div');box.id='petty';box.className='hidden';document.body.appendChild(box);
+ const ready=fetch('/api/petty-voice?list=1&v='+V).then(r=>r.ok?r.json():null).then(j=>{if(j&&j.lines)L=j.lines}).catch(()=>{});
+ function pick(p){
+  const a=L&&L[p];if(!a||!a.length)return null;
+  const rec=st.recent[p]||[],k=Math.min(3,a.length-1),bad=k>0?rec.slice(-k):[];
+  const opts=a.map((_,i)=>i).filter(i=>!bad.includes(i)),i=opts[Math.floor(Math.random()*opts.length)];
+  st.recent[p]=[...rec,i].slice(-3);save();return{p,i,text:a[i]};
+ }
+ function load(l){const key=l.p+'/'+l.i;if(!clips.has(key))clips.set(key,fetch('/api/petty-voice?p='+encodeURIComponent(l.p)+'&i='+l.i+'&v='+V).then(r=>{if(!r.ok)throw 0;return r.blob()}).then(b=>URL.createObjectURL(b)).catch(e=>{clips.delete(key);throw e}));return clips.get(key)}
+ function end(t){if(!t||cur!==t)return;cur=null;box.classList.add('hidden');const f=t.done;t.done=null;if(f)f()}
+ function stop(){const t=cur;if(!t)return;cur=null;try{au.pause()}catch(e){}box.classList.add('hidden');const f=t.done;t.done=null;if(f)f()}
+ /* prio: 3 ads, 2 interruption complaint, 1 ordinary. One picked line drives both voice and caption. */
+ function say(l,prio,kind,done){
+  if(!l||!on()||(adLock&&prio<3)){if(done)done();return}
+  if(cur){if(cur.prio>prio){if(done)done();return}stop()}
+  const t=cur={l,prio,kind,done,playing:false};
+  const fail=()=>end(t),guard=setTimeout(()=>{if(cur===t&&!t.playing)fail()},prio===3?4000:7000);
+  load(l).then(u=>{if(cur!==t)return;if(!on()){fail();return}
+   au.onended=()=>{clearTimeout(guard);end(t)};au.src=u;
+   au.play().then(()=>{if(cur!==t){try{au.pause()}catch(e){}return}t.playing=true;box.textContent=l.text;box.classList.remove('hidden')}).catch(fail);
+  }).catch(fail);
+ }
+ function welcome(){
+  if(welcomed||!on())return;welcomed=true;
+  ready.then(()=>{
+   const d=new Date(),md=(d.getMonth()+1)*100+d.getDate(),h=d.getHours(),wd=d.getDay();
+   const tg=d.getMonth()===10&&wd===4&&d.getDate()>=22&&d.getDate()<=28;
+   const hol=tg?'thanksgiving':md===1224||md===1225?'christmas':md===1231||md===101?'newyear':md===1031?'halloween':md===214?'valentine':md===704?'july4':null;
+   const day=wd===0||wd===6?'weekend':wd===1?'monday':wd===5?'friday':null;
+   const tod=h>=5&&h<12?'morning':h<17&&h>=12?'afternoon':h<22&&h>=17?'evening':'late';
+   const r=Math.random(),seen=!!lsGet('ia_tut');
+   const pool=hol?'welcome_'+hol:!seen?'welcome_new':day&&r<.35?'welcome_'+day:r<.75?'welcome_'+tod:'welcome_back';
+   say(pick(pool),1,'welcome');
+  });
+ }
+ function unlock(){
+  if(!unlocked){unlocked=true;try{au.src=SILENT;au.play().catch(()=>{})}catch(e){}}
+  welcome();
+ }
+ addEventListener('pointerdown',unlock,true);addEventListener('keydown',unlock,true);
+ document.addEventListener('visibilitychange',()=>{if(document.hidden&&cur&&cur.prio<3)stop()});
+ /* after a finished run: performance line, or leaderboard movement per the rank rules */
+ function result(mode,metric,prev){
+  if(!G||G.tutorial)return;
+  const pb=!!(prev&&metric>prev.score);
+  let cat=pb?'result_pb':prev&&metric>0&&metric>=prev.score*.85?'result_near'
+   :(mode==='boss'?G.bossKills===0&&G.level<=1:mode==='survival'?G.survT<12:G.level<=1)?'result_falsestart'
+   :(mode==='boss'?G.bossKills===0:mode==='survival'?G.survT<40:G.level<=3)?'result_terrible':'result_fail';
+  let line=null;
+  const best=Math.max(metric,prev?prev.score:0);
+  if(db&&myId&&lbMode===mode&&rows.length&&best>0){
+   const rank=rows.filter(r=>r.id!==myId&&r.score>best).length+1,o=st.rank[mode],s={r:rank,c:o?o.c:0,d:o?o.d:0};
+   if(o&&o.r){
+    if(rank<o.r){s.c++;
+     const rk=rank>100?(st.upOut++%2===0):(st.upIn++%3<2);
+     line=pick(rk?(s.c>=3?'rank_streak':rank<=10?'rank_top10':'rank_up'):'roast_climb');
+    }else if(rank>o.r){s.c=0;s.d++;st.rank[mode]=s;save();if(s.d%2===0)say(pick('rank_down'),1,'result');return}
+    else s.c=0;
+   }
+   st.rank[mode]=s;save();
+   if(pb&&rank<=10)cat='result_perfect';
+  }
+  if(pb&&prev.score>0&&metric>=prev.score*1.5)cat='result_perfect';
+  say(line||pick(cat),1,'result');
+ }
+ /* player left the result screen: cancel obsolete result speech, count real interruptions */
+ function leave(){
+  if(!cur||cur.kind!=='result')return;
+  const cut=cur.playing;stop();if(!cut)return;
+  st.int++;
+  if(st.int>=st.next){st.next=st.int+5+(Math.random()<.5?0:1);save();say(pick('interrupt'),2,'complaint')}else save();
+ }
+ /* video revive: pre-ad line finishes before the ad appears; nothing talks over the ad */
+ function adBefore(go){adLock=false;say(pick('ad_before'),3,'ad',()=>{adLock=true;go()})}
+ function adAfter(){adLock=false;say(pick('ad_after'),3,'ad')}
+ return{result,leave,adBefore,adAfter,stop,adOff:()=>{adLock=false}};
+})();
 applyTheme();renderCoins();renderToggles();renderDaily();renderPCard();resize();requestAnimationFrame(loop);initDb();
 })();
 </script>
