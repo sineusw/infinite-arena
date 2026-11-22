@@ -1,5 +1,5 @@
 {
-  "appId": "com.pettygames.infinitearena",
+  "appId": "com.pettygamesstudios.infinitearena",
   "appName": "Infinite Arena",
   "webDir": "www",
   "ios": { "contentInset": "never", "backgroundColor": "#090b17", "scrollEnabled": false },

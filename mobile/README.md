@@ -14,6 +14,6 @@ Apple In-App Purchase via RevenueCat (+ Restore purchases in Settings), AdMob re
 - `ios/App/App/Info.plist` → `GADApplicationIdentifier` = your AdMob app ID (`ca-app-pub-...~...`).
 
 ## App Store Connect in-app purchases (product IDs)
-Prefix `com.pettygames.infinitearena.` + item id. Consumable: `hearts1` $0.99, `hearts2` $1.49, `hearts3` $1.99.
+Prefix `com.pettygamesstudios.infinitearena.` + item id. Consumable: `hearts1` $0.99, `hearts2` $1.49, `hearts3` $1.99.
 Non-consumable ($0.99 unless noted): `skin_smiley`, `skin_eye`, `skin_beach`, `skin_planet`, `skin_ninja`, `skin_robot`, `skin_fire` ($1.99), `skin_galaxy` ($1.99), `skin_gem` ($2.99), `theme_sunset`, `theme_ice`, `theme_toxic`, `theme_candy`, `theme_retro`, `theme_gold`, `voice_daisy` ($2.99), `voice_mick` ($2.99).
 Add the same products in RevenueCat (Products), attached to the App Store app.

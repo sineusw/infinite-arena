@@ -1091,7 +1091,7 @@ addEventListener('message',e=>{const d=e.data;if(e.origin!==location.origin||!d)
  if(d.type==='ia-paid'&&payWait&&d.item===payWait.id&&grantSid(d.sid)){const f=payWait.onOk;payWait=null;snd('coin');snd('fanfare');buzz([30,40,30,40,80]);f()}});
 setTimeout(()=>{try{const p=JSON.parse(lsGet('ia_pending')||'null');if(!p)return;localStorage.removeItem('ia_pending');if(p.type==='ia-paid'&&grantSid(p.sid)){grantItem(p.item);snd('coin')}}catch(e){}},0);
 /* ===== iOS app: Apple In-App Purchase (RevenueCat), rewarded ads (AdMob), restore ===== */
-const APP_CFG={rcKey:'appl_REPLACE_WITH_REVENUECAT_KEY',prodPrefix:'com.pettygames.infinitearena.',adUnit:'ca-app-pub-3940256099942544/1712485313',adTesting:true};
+const APP_CFG={rcKey:'appl_REPLACE_WITH_REVENUECAT_KEY',prodPrefix:'com.pettygamesstudios.infinitearena.',adUnit:'ca-app-pub-3940256099942544/1712485313',adTesting:true};
 let rcReady=null;
 function rc(){if(!NATIVE||!NP.Purchases)return Promise.reject(new Error('Purchases unavailable'));if(!rcReady)rcReady=NP.Purchases.configure({apiKey:APP_CFG.rcKey,appUserID:webId()}).catch(e=>{rcReady=null;throw e});return rcReady}
 function grantOwned(info){(info&&info.nonSubscriptionTransactions||[]).forEach(t=>{const id=String(t.productIdentifier||'').replace(APP_CFG.prodPrefix,'');if(/^(skin|theme|voice)_/.test(id))grantItem(id)})}
