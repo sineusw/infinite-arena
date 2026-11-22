@@ -3,6 +3,7 @@
 // Uses ELEVENLABS_API_KEY if this project has it; otherwise relays through 99% Impossible's
 // server-side voice endpoint (petty-voice / cast-voice, same voices, models and settings). The key never reaches the browser.
 import { LINES } from './_petty-lines.js';
+import { cors } from './_util.js';
 
 const CAST = {
   petty: { voiceId: 'qxePw1S1QmBgjlU3GIy5', modelId: 'eleven_flash_v2_5', settings: { stability: 0.43, similarity_boost: 0.84, style: 0.42, use_speaker_boost: true, speed: 0.96 } },
@@ -25,6 +26,7 @@ async function voice(c, text) {
 }
 
 export default async function handler(req, res) {
+  if (cors(req, res)) return;
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
   const { list, p, i } = req.query, c = CAST[req.query.c] ? req.query.c : 'petty';
   if (list) {

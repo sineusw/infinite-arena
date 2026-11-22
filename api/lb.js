@@ -3,6 +3,7 @@
 // so a board is read with a single list() call:
 //   lb/<board>/<key>/<id>_<score>_<level>_<bosses>_<plv>_<base64url name>
 import { put, list, del } from '@vercel/blob';
+import { cors, cleanName } from './_util.js';
 
 const BOARDS = ['scores', 'survival', 'bossrush', 'daily', 'weekly'];
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -38,16 +39,21 @@ function parse(pathname) {
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
+  if (cors(req, res)) return;
   try {
     if (req.method === 'GET') {
       const { board, key, limit } = req.query;
       if (!BOARDS.includes(board)) return res.status(400).json({ error: 'bad board' });
       const k = boardKey(board, key);
       if (!k) return res.status(400).json({ error: 'bad key' });
+      const reports = new Map();
+      for (const b of await listAll('reports/')) { const id = b.pathname.split('/')[1]; reports.set(id, (reports.get(id) || 0) + 1); }
       const best = new Map();
       for (const b of await listAll(`lb/${board}/${k}/`)) {
         const r = parse(b.pathname);
         if (r && r.id === 'testclaude0001') { await del(b.url); continue; } // launch smoke-test entry
+        if (r) r.name = cleanName(r.name);
+        if (r && (reports.get(r.id) || 0) >= 2) continue; // hidden after 2 player reports
         if (r &&(!best.has(r.id) || best.get(r.id).score < r.score)) best.set(r.id, r);
       }
       const n = int(limit, 500) || 500;
@@ -59,12 +65,17 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
       const b = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};
+      if (b.report) {
+        if (!ID_RE.test(b.report) || !ID_RE.test(b.by || '') || b.report === b.by) return res.status(400).json({ error: 'bad report' });
+        await put(`reports/${b.report}/${b.by}`, '1', { access: 'public', addRandomSuffix: false, allowOverwrite: true, contentType: 'text/plain' });
+        return res.status(200).json({ ok: true });
+      }
       if (!BOARDS.includes(b.board) || !ID_RE.test(b.id || '')) return res.status(400).json({ error: 'bad request' });
       const k = boardKey(b.board, b.board === 'weekly' ? b.week : b.day);
       if (!k) return res.status(400).json({ error: 'bad key' });
       const score = int(b.score, 1e9);
       if (!score) return res.status(400).json({ error: 'no score' });
-      const name = String(b.name || 'Player').replace(/\s+/g, ' ').trim().slice(0, 16) || 'Player';
+      const name = cleanName(b.name);
       const prefix = `lb/${b.board}/${k}/${b.id}_`;
       const old = await listAll(prefix);
       if (old.some(o => (parse(o.pathname) || {}).score >= score)) return res.status(200).json({ ok: true, kept: true });
