@@ -1790,7 +1790,7 @@ async function submitWeekly(score,level){
 }
 /* ================= PETTY / DAISY / MICK (commentator, ElevenLabs voices) ================= */
 const Petty=(()=>{
- const V=1,SILENT='data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+ const V=2,SILENT='data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
  let L=null,cur=null,unlocked=false,welcomed=false,adLock=false;
  const au=new Audio();au.preload='auto';const clips=new Map();
  const st=(()=>{try{return JSON.parse(lsGet('ia_petty')||'null')||{}}catch(e){return{}}})();
