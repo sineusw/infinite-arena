@@ -322,10 +322,10 @@ body.onmenu #hud,body.onmenu #info{display:none!important}
     <div class="card">
      <h2>OUT OF LIVES!</h2>
      <p class="tag" id="revTag">Keep your score and jump back in.</p>
-     <div id="adBox" class="hidden"><div class="adph">▶ VIDEO<small>Video ad space. Real video ads start once the game is on its own website.</small></div><p id="adCount"></p></div>
+     <div id="adBox" class="hidden"><div class="adph">▶ VIDEO<small>Ad slot. Your free revive is on us for now.</small></div><p id="adCount"></p></div>
      <div id="revOpts">
       <button class="big" id="watchAd">▶ WATCH A VIDEO · REVIVE WITH 1 ❤️</button>
-      <p class="credit" style="margin:14px 0 6px">💳 Buy hearts and keep going:</p>
+      <p class="credit" style="margin:14px 0 6px">💳 Or buy hearts and keep going:</p>
       <div class="row2" style="margin-top:0"><button class="sec usdb" data-h="1">1 ❤️<br>$0.99</button><button class="sec usdb" data-h="2">2 ❤️<br>$1.49</button><button class="sec usdb" data-h="3">3 ❤️<br>$1.99</button></div>
       <p class="credit" id="revNote"></p>
      </div>
@@ -1087,11 +1087,9 @@ function demoBuy(item,price,onOk,id){if(webMode&&id){realBuy(id,onOk);return}dpO
 $('#dpCancel').onclick=()=>{dpOk=null;$('#demoPay').classList.add('hidden')};
 $('#dpPay').onclick=()=>{const f=dpOk;if(!f)return;dpOk=null;$('#dpPay').disabled=true;$('#dpPay').textContent='Processing…';setTimeout(()=>{$('#demoPay').classList.add('hidden');snd('coin');snd('fanfare');buzz([30,40,30,40,80]);f()},900)};
 function showRevive(){
- if(G.mode==='daily'){finishGame();return}
  $('#adBox').classList.add('hidden');$('#revOpts').classList.remove('hidden');$('#noRow').classList.remove('hidden');$('#revNote').textContent='';
- const used=true;$('#watchAd').classList.add('hidden');/* video revive hidden until a real ad network is wired */
- {const row=document.querySelector('#revOpts .usdb').parentElement;row.classList.toggle('hidden',G.mode==='daily');row.previousElementSibling.classList.toggle('hidden',G.mode==='daily')}
- $('#revTag').textContent='Buy hearts to jump back in and keep your score.';
+ const used=!!G.adUsed;$('#watchAd').classList.toggle('hidden',used);
+ $('#revTag').textContent=used?'You used your free ad revive this run. Buy hearts to keep going.':'Watch a short ad for 1 free heart, or buy hearts. You keep your score.';
  $('#revive').classList.remove('hidden');
 }
 document.querySelectorAll('#revOpts .usdb').forEach(b=>b.onclick=()=>{const n=+b.dataset.h,price=b.textContent.replace(/^.*\$/,'$');demoBuy(n+' heart'+(n>1?'s':'')+' · revive now',price,()=>{revive(n,true)},'hearts'+n)});
@@ -1272,7 +1270,7 @@ $('#tJoy').onclick=()=>{const order=['pad','joy','finger'];prof.ctl=order[(order
 let joyId=null,joyO=null,joyV={x:0,y:0},joyS={x:0,y:0};const JOY_R=66;
 const joyEl=$('#joy'),knob=$('#joyKnob');
 let lastCtl='';
-function joyShow(){const on=TOUCH&&prof.ctl!=='finger'&&!!G;if(joyEl.classList.contains('hidden')===on)joyEl.classList.toggle('hidden',!on);
+function joyShow(){const on=TOUCH&&prof.ctl!=='finger'&&!!G&&G.phase!=='over'&&$('#menu').classList.contains('hidden');if(joyEl.classList.contains('hidden')===on)joyEl.classList.toggle('hidden',!on);
  if(lastCtl!==prof.ctl){lastCtl=prof.ctl;joyEl.classList.toggle('pad',prof.ctl==='pad');$('#joyHint').textContent=prof.ctl==='pad'?'👆 Slide your thumb here. The player copies it exactly.':'🕹️ Drag anywhere here to move'}}
 let padId=null,padLast=null;const padD={x:0,y:0};const PAD_GAIN=1.5;
 let knobT={x:0,y:0},knobP={x:0,y:0};function setKnob(dx,dy){knobT={x:dx,y:dy}}
@@ -1668,7 +1666,7 @@ function renderChips(){
 
 /* ================= LOOP ================= */
 let last=performance.now();
-function loop(now){
+function loop(now){if(joyEl)joyShow();
  const dt=Math.min(.033,(now-last)/1000);last=now;
  if(!paused&&$('#shop').classList.contains('hidden'))update(dt);
  if(G&&G.mode==='survival')hud();
