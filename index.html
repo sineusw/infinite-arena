@@ -178,11 +178,14 @@ input:focus{border-color:var(--cyan)}
 /* shop */
 .shophead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .shophead h2{margin:0;font-size:22px}
-#shopGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;max-height:56vh;overflow:auto;padding:2px;margin-bottom:12px;text-align:left}
-.item{background:#0b0e1c;border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px}
+#shopGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;max-height:56vh;overflow:auto;padding:2px;margin-bottom:12px;text-align:left}
+.item{min-width:0;background:#0b0e1c;border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px}
 .item.eq{border-color:var(--green)}
 .item h4{font-size:15px}
 .item p{font-size:12px;color:var(--muted);line-height:1.4;flex:1}
+.thprev{position:relative;margin:-12px -12px 2px;border-radius:12px 12px 0 0;overflow:hidden;line-height:0}.thprev canvas{width:100%;height:auto;display:block;aspect-ratio:170/110}
+.thtag{position:absolute;top:8px;left:8px;line-height:1;font-size:10px;font-weight:900;letter-spacing:1px;padding:4px 7px;border-radius:6px;background:var(--green);color:#03140a}
+.item.thcard{padding-top:12px;overflow:hidden}.item.thcard h4{font-size:16px}
 .sw{display:flex;gap:4px;height:26px;border-radius:8px;overflow:hidden}
 .sw i{flex:1}
 .ibtns{display:flex;gap:6px}
@@ -1763,6 +1766,17 @@ function renderVoices(grid){
   bt.appendChild(b);card.appendChild(bt);grid.appendChild(card);
  });
 }
+function themePrev(t){const W2=170,H2=110,cv2=el('canvas');cv2.width=W2*2;cv2.height=H2*2;const c=cv2.getContext('2d');c.scale(2,2);
+ c.fillStyle=t.bg;c.fillRect(0,0,W2,H2);c.strokeStyle=t.grid;c.lineWidth=1;for(let x=0;x<W2;x+=17){c.beginPath();c.moveTo(x+.5,0);c.lineTo(x+.5,H2);c.stroke()}for(let y=0;y<H2;y+=17){c.beginPath();c.moveTo(0,y+.5);c.lineTo(W2,y+.5);c.stroke()}
+ const v=c.createRadialGradient(W2/2,H2/2,10,W2/2,H2/2,W2*.7);v.addColorStop(0,'rgba(255,255,255,.05)');v.addColorStop(1,'rgba(0,0,0,.45)');c.fillStyle=v;c.fillRect(0,0,W2,H2);
+ const orb=(x,y,r,col,g)=>{c.save();c.shadowColor=col;c.shadowBlur=g;const gr=c.createRadialGradient(x-r*.35,y-r*.4,r*.1,x,y,r);gr.addColorStop(0,'#fff');gr.addColorStop(.25,col);gr.addColorStop(1,col);c.fillStyle=gr;c.beginPath();c.arc(x,y,r,0,7);c.fill();c.restore()};
+ c.save();c.strokeStyle=t.player;c.globalAlpha=.35;c.lineWidth=3;c.lineCap='round';c.beginPath();c.moveTo(38,82);c.quadraticCurveTo(52,70,70,66);c.stroke();c.restore();
+ orb(78,62,10,t.player,18);c.fillStyle=t.core;c.beginPath();c.arc(76,60,3.5,0,7);c.fill();
+ orb(128,30,8,t.enemy,12);orb(146,84,7,t.enemy,12);orb(30,26,7,t.chaser,12);
+ c.save();c.strokeStyle=t.orb;c.lineWidth=1.5;c.shadowColor=t.orb;c.shadowBlur=10;for(let i=0;i<6;i++){const a=i*Math.PI/3;c.beginPath();c.moveTo(112+Math.cos(a)*8,64+Math.sin(a)*8);c.lineTo(112+Math.cos(a)*12,64+Math.sin(a)*12);c.stroke()}c.restore();orb(112,64,5.5,t.orb,14);
+ c.save();c.shadowColor=t.pu;c.shadowBlur=12;c.fillStyle=t.pu;c.beginPath();c.roundRect(48,18,15,15,4);c.fill();c.fillStyle='rgba(0,0,0,.35)';c.font='bold 11px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText('+',55.5,26);c.restore();
+ c.save();c.translate(26,88);c.shadowColor=t.curse;c.shadowBlur=12;c.fillStyle=t.curse;c.beginPath();for(let i=0;i<16;i++){const a=i*Math.PI/8,rr=i%2?5:9;c.lineTo(Math.cos(a)*rr,Math.sin(a)*rr)}c.closePath();c.fill();c.restore();
+ return cv2}
 function renderShop(){
  renderCoins();
  const grid=$('#shopGrid');grid.innerHTML='';
@@ -1776,7 +1790,7 @@ function renderShop(){
    const gg=c2.createRadialGradient(80,40,4,80,40,70);gg.addColorStop(0,'rgba(255,255,255,.06)');gg.addColorStop(1,'rgba(0,0,0,0)');c2.fillStyle=gg;c2.fillRect(0,0,160,64);
    c2.fillStyle='rgba(0,0,0,.45)';c2.beginPath();c2.ellipse(84,52,17,6,0,0,7);c2.fill();
    drawSkin(c2,k,80,k==='fire'?40:34,17,performance.now(),T.player,k==='fire'?Math.PI/2:0);card.appendChild(pc)}
-  else{const sw=el('div','sw');[it.bg,it.player,it.orb,it.enemy,it.pu,it.curse].forEach(c=>{const i=el('i');i.style.background=c;sw.appendChild(i)});card.appendChild(sw)}
+  else{const wr=el('div','thprev');wr.appendChild(themePrev(it));if(eq)wr.appendChild(el('span','thtag','EQUIPPED'));card.classList.add('thcard');card.appendChild(wr)}
   card.appendChild(el('h4','',it.name));card.appendChild(el('p','',it.desc));
   const bt=el('div','ibtns'),b=el('button');
   const equip=()=>{if(skins)prof.skin=k;else{prof.theme=k;applyTheme()}};
