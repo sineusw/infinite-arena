@@ -27,14 +27,18 @@ button{font:inherit;cursor:pointer}
 #lbBtn{display:none}
 #info{height:80px;flex:none;padding:6px 12px;border-bottom:1px solid var(--line);background:#0a0d1b;display:flex;flex-direction:column;justify-content:center;gap:4px}
 #twistB{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%) scale(.6);z-index:9000;pointer-events:none;opacity:0;text-align:center;padding:16px 22px;border-radius:18px;background:rgba(10,12,28,.92);border:2px solid var(--pu);box-shadow:0 0 30px rgba(0,0,0,.6);max-width:86vw;transition:opacity .25s,transform .25s}#twistB.on{opacity:1;transform:translate(-50%,-50%) scale(1)}#twistB b{display:block;font-size:26px;letter-spacing:1px;color:var(--pu)}#twistB small{display:block;font-size:15px;margin-top:6px;color:#fff;opacity:.9}
+#menu.fresh .pcard,#menu.fresh #claimBtn,#menu.fresh #dCard,#menu.fresh label,#menu.fresh .modes,#menu.fresh #modeDesc,#menu.fresh .row2,#menu.fresh #menuCoins,#menu.fresh #menuRank,#menu.fresh #daily,#menu.fresh #name{display:none!important}
+#menu.fresh .freshTip{display:block}.freshTip{display:none;margin:4px 0 14px;font-size:15px;color:var(--muted)}
 #msg.menuLine{display:flex;align-items:center;max-height:none;overflow:visible;-webkit-line-clamp:unset;padding:2px 0}
 #msg.menuLine .stk{display:inline-flex;align-items:center;gap:8px;padding:3px 14px 3px 6px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid rgba(255,120,60,.35)}
 #msg.menuLine .stk i{font-style:normal;font-size:18px;width:26px;height:26px;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle,rgba(255,140,40,.35),transparent 70%)}
 #msg.menuLine .stk b{display:block;font-size:14px;color:#ffb347;letter-spacing:.3px}#msg.menuLine .stk small{display:block;font-size:11px;font-weight:600;color:var(--muted)}
 .dcard{display:block;width:100%;text-align:left;margin:12px 0 4px;padding:14px 16px;border-radius:16px;border:2px solid transparent;color:#fff;cursor:pointer;background:linear-gradient(#141530,#141530) padding-box,linear-gradient(90deg,#ff3d6e,#8a3dff,#3dd6ff) border-box;box-shadow:0 0 22px rgba(138,61,255,.25)}
 .dcard .dh{display:flex;justify-content:space-between;font-size:11px;font-weight:800;letter-spacing:1.5px;color:#c9b6ff}
-.dcard .dt{display:flex;align-items:center;gap:12px;margin:8px 0 4px}.dcard .di{font-size:26px;line-height:1;width:44px;height:44px;display:grid;place-items:center;border-radius:12px;background:rgba(138,61,255,.18)}.dcard .dn{font-size:22px;font-weight:900;letter-spacing:.5px}
-.dcard .dd{font-size:14px;color:#e6e6ff;opacity:.9}.dcard .df{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:12px;color:var(--muted)}
+.dcard .dt{display:flex;align-items:center;gap:12px;margin:10px 0 0;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.1)}.dcard .di{font-size:26px;line-height:1;width:44px;height:44px;display:grid;place-items:center;border-radius:12px;background:rgba(138,61,255,.18)}.dcard .dn{font-size:22px;font-weight:900;letter-spacing:.5px}
+.dcard .dl{margin-top:10px;font-size:10.5px;font-weight:800;letter-spacing:1.4px;color:#3dd6ff}.dcard .dd{font-size:15px;font-weight:700;color:#fff;margin-top:3px}
+.dcard .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.dcard .tags span{font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:999px;background:rgba(255,255,255,.07);color:#d8d8f0}
+.dcard .df{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.1);font-size:12px;color:var(--muted)}
 .dcard .dp{padding:7px 14px;border-radius:10px;font-weight:900;font-size:13px;color:#0b0c1a;background:linear-gradient(90deg,#3dd6ff,#3dff9a)}
 #msg{font-weight:700;font-size:13.5px;line-height:1.3;max-height:2.6em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 #msg.good{color:var(--pu)}#msg.bad{color:#ff8ad8}#msg.boss{color:#ff6b6b}#msg.tut{color:#fff}
@@ -230,6 +234,7 @@ input:focus{border-color:var(--cyan)}
      <button class="claim hidden" id="claimBtn"></button>
      <button class="dcard" id="dCard"></button>
      <label>Game mode</label><div class="modes" id="modes"></div><div id="modeDesc"></div>
+     <p class="freshTip">👆 Tap PLAY. A 30-second tutorial shows you everything.</p>
      <button class="big" id="play">PLAY</button>
      <div class="row2"><button class="sec" id="menuTut">🎓 Tutorial</button><button class="sec" id="menuShop">🛒 Shop</button><button class="sec" id="menuLb">🏆 Board</button></div>
      <div style="height:16px"></div>
@@ -1080,7 +1085,7 @@ function showClose(mode,metric,prevBest){
  box.textContent=out.slice(0,2).join('  ·  ');box.classList.toggle('hidden',!out.length);
 }
 function finishGame(){
- const mode=G.mode,metric=metricOf();
+ const mode=G.mode,metric=metricOf();lsSet('ia_g',String(+(lsGet('ia_g')||0)+1));
  if(mode==='survival')track('survive',Math.floor(G.survT));
  setMsg(mode==='survival'?'You lasted '+fmtTime(G.survT)+'!':mode==='boss'?'Bosses beaten: '+G.bossKills:'Game over at level '+G.level,'bad',99);
  let earned=mode==='survival'?Math.floor(G.survT/3)+Math.floor(G.score/200):mode==='boss'?G.bossKills*50+Math.floor(G.score/200):Math.floor(G.score/100)+G.bossKills*50;
@@ -1194,7 +1199,8 @@ function togglePause(force){
 document.addEventListener('visibilitychange',()=>{if(document.hidden)togglePause(true)});
 $('#pauseBtn').onclick=()=>togglePause();
 $('#resume').onclick=()=>togglePause(false);
-function menuLine(){const m=$('#msg');m.className='menuLine';m.innerHTML='';
+function isFresh(){return !(+(lsGet('ia_g')||0)>0)&&!(prof.xp>0)}
+function menuLine(){const m=$('#msg');m.className='menuLine';m.innerHTML='';const fr=isFresh();$('#menu').classList.toggle('fresh',fr);if(fr){m.appendChild(el('span','','👋 Welcome! Dodge the red, grab the gold.'));const ft=$('.freshTip');if(ft)ft.textContent=lsGet('ia_tut')?'👆 Tap PLAY to start your first run.':'👆 Tap PLAY. A quick tutorial shows you everything.';return}
  const st=(prof.daily&&prof.daily.streak)||0,done=prof.dailyRun===dayStr(),w=el('span','stk');
  w.appendChild(el('i','','🔥'));const t=el('span');t.appendChild(el('b','',st?st+'-day streak':'No streak yet'));
  t.appendChild(el('small','',done?'Daily done. Come back tomorrow!':st?'Play today\u2019s Daily to keep it':'Play today\u2019s Daily to start one'));w.appendChild(t);m.appendChild(w);renderDCard()}
@@ -1202,7 +1208,8 @@ function dLeft(){const n=new Date(),e=new Date(n.getFullYear(),n.getMonth(),n.ge
 function renderDCard(){const c=$('#dCard');if(!c)return;const t=todayTwist(),done=prof.dailyRun===dayStr(),b=bests.daily;c.innerHTML='';
  const h=el('div','dh');h.append(el('span','','📅 TODAY\u2019S DAILY CHALLENGE'),el('span','','New in '+dLeft()));c.appendChild(h);
  const tt=el('div','dt');tt.append(el('span','di',t.ic),el('span','dn',t.name.toUpperCase()));c.appendChild(tt);
- c.appendChild(el('div','dd',t.desc+' Same run for everyone. One leaderboard.'));
+ c.appendChild(el('div','dl','WHAT\u2019S DIFFERENT TODAY'));c.appendChild(el('div','dd',t.desc));
+ const tg=el('div','tags');tg.append(el('span','','👥 Same run for everyone'),el('span','','🏆 Own leaderboard'));c.appendChild(tg);
  const f=el('div','df');f.append(el('span','',done?'✅ Played today'+(b&&b.key===boardKey('daily')?' · best '+fmtMetric('daily',b.score):''):'🎁 First run today: +50 🌙'),el('span','dp',done?'PLAY AGAIN ▶':'PLAY DAILY ▶'));c.appendChild(f)}
 $('#dCard').onclick=()=>{selMode='daily';lsSet('ia_mode','daily');renderModes();setLbMode('daily');startGame('daily')};
 setInterval(()=>{if(!G)renderDCard()},30000);
