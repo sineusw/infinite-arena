@@ -187,6 +187,7 @@ input:focus{border-color:var(--cyan)}
 @media (max-width:420px){#cb{display:none!important}}
 #petty{position:fixed;left:50%;top:max(12px,env(safe-area-inset-top));transform:translateX(-50%);z-index:9999;max-width:min(92vw,520px);padding:9px 14px;border-radius:14px;background:rgba(10,12,28,.92);border:1px solid var(--line);color:var(--text);font-weight:700;font-size:14px;line-height:1.3;text-align:center;pointer-events:none;box-shadow:0 6px 24px rgba(0,0,0,.5)}#petty::before{content:'🎙️ ' attr(data-who) ': ';color:var(--yellow)}#petty.hidden{display:none}
 </style>
+<script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
 <div id="app">
@@ -270,7 +271,7 @@ input:focus{border-color:var(--cyan)}
      <div id="adBox" class="hidden"><div class="adph">▶ VIDEO<small>Video ad space. Real video ads start once the game is on its own website.</small></div><p id="adCount"></p></div>
      <div id="revOpts">
       <button class="big" id="watchAd">▶ WATCH A VIDEO · REVIVE WITH 1 ❤️</button>
-      <p class="credit" style="margin:14px 0 6px">💳 Or buy hearts and keep going:</p>
+      <p class="credit" style="margin:14px 0 6px">💳 Buy hearts and keep going:</p>
       <div class="row2" style="margin-top:0"><button class="sec usdb" data-h="1">1 ❤️<br>$0.99</button><button class="sec usdb" data-h="2">2 ❤️<br>$1.49</button><button class="sec usdb" data-h="3">3 ❤️<br>$1.99</button></div>
       <p class="credit" id="revNote"></p>
      </div>
@@ -1026,10 +1027,11 @@ function demoBuy(item,price,onOk,id){if(webMode&&id){realBuy(id,onOk);return}dpO
 $('#dpCancel').onclick=()=>{dpOk=null;$('#demoPay').classList.add('hidden')};
 $('#dpPay').onclick=()=>{const f=dpOk;if(!f)return;dpOk=null;$('#dpPay').disabled=true;$('#dpPay').textContent='Processing…';setTimeout(()=>{$('#demoPay').classList.add('hidden');snd('coin');snd('fanfare');buzz([30,40,30,40,80]);f()},900)};
 function showRevive(){
+ if(G.mode==='daily'){finishGame();return}
  $('#adBox').classList.add('hidden');$('#revOpts').classList.remove('hidden');$('#noRow').classList.remove('hidden');$('#revNote').textContent='';
- const used=!!G.adUsed;$('#watchAd').classList.toggle('hidden',used);
+ const used=true;$('#watchAd').classList.add('hidden');/* video revive hidden until a real ad network is wired */
  {const row=document.querySelector('#revOpts .usdb').parentElement;row.classList.toggle('hidden',G.mode==='daily');row.previousElementSibling.classList.toggle('hidden',G.mode==='daily')}
- $('#revTag').textContent=used?(G.mode==='daily'?'You already used your video revive. In the Daily Challenge you can\u2019t buy hearts.':'You already used your video revive this run. You can still buy hearts.'):'Watch a short video to come back with 1 heart and keep your score.';
+ $('#revTag').textContent='Buy hearts to jump back in and keep your score.';
  $('#revive').classList.remove('hidden');
 }
 document.querySelectorAll('#revOpts .usdb').forEach(b=>b.onclick=()=>{const n=+b.dataset.h,price=b.textContent.replace(/^.*\$/,'$');demoBuy(n+' heart'+(n>1?'s':'')+' · revive now',price,()=>{revive(n,true)},'hearts'+n)});
