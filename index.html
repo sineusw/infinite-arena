@@ -184,6 +184,8 @@ input:focus{border-color:var(--cyan)}
 .item h4{font-size:15px}
 .item p{font-size:12px;color:var(--muted);line-height:1.4;flex:1}
 .thprev{position:relative;margin:-12px -12px 2px;border-radius:12px 12px 0 0;overflow:hidden;line-height:0}.thprev canvas{width:100%;height:auto;display:block;aspect-ratio:170/110}
+.ibtns button{white-space:nowrap}
+.hearb{width:100%;padding:8px;border-radius:10px;border:1px solid var(--line);background:#141833;color:#fff;font-weight:800}
 .thtag{position:absolute;top:8px;left:8px;line-height:1;font-size:10px;font-weight:900;letter-spacing:1px;padding:4px 7px;border-radius:6px;background:var(--green);color:#03140a}
 .item.thcard{padding-top:12px;overflow:hidden}.item.thcard h4{font-size:16px}
 .sw{display:flex;gap:4px;height:26px;border-radius:8px;overflow:hidden}
@@ -387,27 +389,27 @@ function el(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=
    and no enemy or curse shares the gold orb's color. */
 const THEMES={
  neon:{name:'Neon',price:0,desc:'The original arcade glow.',bg:'#090b17',grid:'rgba(80,100,200,.08)',player:'#34e7ff',core:'#e9fdff',orb:'#ffd23f',enemy:'#ff3d81',chaser:'#ff2a2a',dasher:'#e8ecff',mine:'#ff2a2a',well:'#4d7cff',turret:'#7aa2ff',bullet:'#ff8fb8',pu:'#2bff88',curse:'#b84dff'},
- sunset:{name:'Sunset Drive',price:150,desc:'Hot pinks and golden hour.',bg:'#170812',grid:'rgba(255,140,90,.08)',player:'#ffe066',core:'#fff8d6',orb:'#00f5d4',enemy:'#ff5e5b',chaser:'#d7263d',dasher:'#ff9f1c',mine:'#d7263d',well:'#4d7cff',turret:'#f15bb5',bullet:'#ffb3c7',pu:'#a6ff00',curse:'#b84dff'},
- ice:{name:'Frostbite',price:200,desc:'Cold, clean and deadly.',bg:'#05101b',grid:'rgba(150,210,255,.09)',player:'#ffffff',core:'#9fe6ff',orb:'#ffd166',enemy:'#4cc9f0',chaser:'#4361ee',dasher:'#7b8cff',mine:'#4361ee',well:'#90e0ef',turret:'#90e0ef',bullet:'#e0fbff',pu:'#2bff88',curse:'#ff2bd6'},
- toxic:{name:'Toxic Waste',price:250,desc:'Glowing green. Do not touch.',bg:'#06110a',grid:'rgba(120,255,120,.07)',player:'#b6ff3b',core:'#f2ffe0',orb:'#ffee00',enemy:'#c33cff',chaser:'#ff2bd6',dasher:'#ff3b3b',mine:'#ff3b3b',well:'#3d5afe',turret:'#ff8fab',bullet:'#ffc2e0',pu:'#00e5ff',curse:'#f5f5f5'},
- candy:{name:'Candy Crush',price:300,desc:'Sweet colors, sour enemies.',bg:'#1a0e22',grid:'rgba(255,170,220,.08)',player:'#7df9ff',core:'#ffffff',orb:'#fff36b',enemy:'#ff77e9',chaser:'#ff4d6d',dasher:'#e8ecff',mine:'#ff4d6d',well:'#5b8cff',turret:'#ff9de2',bullet:'#ffd1f7',pu:'#69f0ae',curse:'#9d4dff'},
- retro:{name:'Retro Terminal',price:400,desc:'Old-school green screen.',bg:'#020802',grid:'rgba(51,255,102,.09)',player:'#ffffff',core:'#33ff66',orb:'#ffcc00',enemy:'#33ff66',chaser:'#9dff7a',dasher:'#a8ff60',mine:'#9dff7a',well:'#1fbf4f',turret:'#99ff99',bullet:'#ccffcc',pu:'#00e5ff',curse:'#ff3df0'},
- gold:{name:'24K Gold',price:750,desc:'Flex on the leaderboard.',bg:'#0c0a04',grid:'rgba(255,215,120,.08)',player:'#ffd700',core:'#fff6c2',orb:'#00ffd0',enemy:'#e8e8e8',chaser:'#ff4040',dasher:'#ff9f43',mine:'#ff4040',well:'#5b8cff',turret:'#f8f8f8',bullet:'#fff2b3',pu:'#7dff3b',curse:'#b84dff'}
+ sunset:{name:'Sunset Drive',price:1200,desc:'Hot pinks and golden hour.',bg:'#170812',grid:'rgba(255,140,90,.08)',player:'#ffe066',core:'#fff8d6',orb:'#00f5d4',enemy:'#ff5e5b',chaser:'#d7263d',dasher:'#ff9f1c',mine:'#d7263d',well:'#4d7cff',turret:'#f15bb5',bullet:'#ffb3c7',pu:'#a6ff00',curse:'#b84dff'},
+ ice:{name:'Frostbite',price:1600,desc:'Cold, clean and deadly.',bg:'#05101b',grid:'rgba(150,210,255,.09)',player:'#ffffff',core:'#9fe6ff',orb:'#ffd166',enemy:'#4cc9f0',chaser:'#4361ee',dasher:'#7b8cff',mine:'#4361ee',well:'#90e0ef',turret:'#90e0ef',bullet:'#e0fbff',pu:'#2bff88',curse:'#ff2bd6'},
+ toxic:{name:'Toxic Waste',price:2000,desc:'Glowing green. Do not touch.',bg:'#06110a',grid:'rgba(120,255,120,.07)',player:'#b6ff3b',core:'#f2ffe0',orb:'#ffee00',enemy:'#c33cff',chaser:'#ff2bd6',dasher:'#ff3b3b',mine:'#ff3b3b',well:'#3d5afe',turret:'#ff8fab',bullet:'#ffc2e0',pu:'#00e5ff',curse:'#f5f5f5'},
+ candy:{name:'Candy Crush',price:2400,desc:'Sweet colors, sour enemies.',bg:'#1a0e22',grid:'rgba(255,170,220,.08)',player:'#7df9ff',core:'#ffffff',orb:'#fff36b',enemy:'#ff77e9',chaser:'#ff4d6d',dasher:'#e8ecff',mine:'#ff4d6d',well:'#5b8cff',turret:'#ff9de2',bullet:'#ffd1f7',pu:'#69f0ae',curse:'#9d4dff'},
+ retro:{name:'Retro Terminal',price:3200,desc:'Old-school green screen.',bg:'#020802',grid:'rgba(51,255,102,.09)',player:'#ffffff',core:'#33ff66',orb:'#ffcc00',enemy:'#33ff66',chaser:'#9dff7a',dasher:'#a8ff60',mine:'#9dff7a',well:'#1fbf4f',turret:'#99ff99',bullet:'#ccffcc',pu:'#00e5ff',curse:'#ff3df0'},
+ gold:{name:'24K Gold',price:6000,desc:'Flex on the leaderboard.',bg:'#0c0a04',grid:'rgba(255,215,120,.08)',player:'#ffd700',core:'#fff6c2',orb:'#00ffd0',enemy:'#e8e8e8',chaser:'#ff4040',dasher:'#ff9f43',mine:'#ff4040',well:'#5b8cff',turret:'#f8f8f8',bullet:'#fff2b3',pu:'#7dff3b',curse:'#b84dff'}
 };
 let T=THEMES.neon;
 
 /* ================= PROFILE ================= */
 const SKINS={
  orb:{name:'Classic Orb',price:0,desc:'The original. Takes your color pack\u2019s color.'},
- smiley:{name:'Smiley',price:150,usd:'$0.99',desc:'Always happy. Even when it shouldn\u2019t be.'},
- eye:{name:'Eyeball',price:200,usd:'$0.99',desc:'Watches where it\u2019s going.'},
- beach:{name:'Beach Ball',price:250,usd:'$0.99',desc:'Spins as you move.'},
- planet:{name:'Ringed Planet',price:300,usd:'$0.99',desc:'A tiny world with its own ring.'},
- ninja:{name:'Ninja',price:400,usd:'$0.99',desc:'Silent. Deadly. Round.'},
- robot:{name:'Robo',price:450,usd:'$0.99',desc:'Scanning for orbs\u2026'},
- fire:{name:'Fireball',price:600,usd:'$1.99',desc:'Leaves the arena feeling hot.'},
- galaxy:{name:'Galaxy',price:800,usd:'$1.99',desc:'A whole galaxy, spinning inside.'},
- gem:{name:'Diamond',price:1000,usd:'$2.99',desc:'The flex. Sparkles on the leaderboard.'},
+ smiley:{name:'Smiley',price:1200,usd:'$0.99',desc:'Always happy. Even when it shouldn\u2019t be.'},
+ eye:{name:'Eyeball',price:1600,usd:'$0.99',desc:'Watches where it\u2019s going.'},
+ beach:{name:'Beach Ball',price:2000,usd:'$0.99',desc:'Spins as you move.'},
+ planet:{name:'Ringed Planet',price:2400,usd:'$0.99',desc:'A tiny world with its own ring.'},
+ ninja:{name:'Ninja',price:3200,usd:'$0.99',desc:'Silent. Deadly. Round.'},
+ robot:{name:'Robo',price:3600,usd:'$0.99',desc:'Scanning for orbs\u2026'},
+ fire:{name:'Fireball',price:4800,usd:'$1.99',desc:'Leaves the arena feeling hot.'},
+ galaxy:{name:'Galaxy',price:6400,usd:'$1.99',desc:'A whole galaxy, spinning inside.'},
+ gem:{name:'Diamond',price:8000,usd:'$2.99',desc:'The flex. Sparkles on the leaderboard.'},
  crown:{name:'Champion Crown',price:0,special:true,desc:'Only for players who reach the top 3 of the weekly leaderboard.'}
 };
 const MISSIONS=[
@@ -422,13 +424,13 @@ const MISSIONS=[
  {k:'dodge',goal:3,text:'Outlast 3 curses',reward:50}
 ];
 const UPGRADES={
- shield:{name:'Starting Shield',ic:'🛡️',desc:'Start every run with a shield.',costs:[400]},
- heart:{name:'Extra Heart',ic:'❤️',desc:'Start every run with 4 hearts instead of 3.',costs:[1000]},
- dur:{name:'Longer Power-Ups',ic:'⏳',desc:'Power-ups last 15% longer per level.',costs:[200,400,700]},
- mag:{name:'Stronger Magnet',ic:'🧲',desc:'The magnet reaches 20% farther per level.',costs:[150,300,500]},
- combo:{name:'Combo Keeper',ic:'🔥',desc:'+0.4 seconds to keep a combo going, per level.',costs:[250,500]},
- luck:{name:'Lucky Drops',ic:'🍀',desc:'Power-ups show up 10% more often per level.',costs:[200,450,800]},
- coin:{name:'Coin Boost',ic:'🌙',desc:'Earn 10% more Moon Coins per level.',costs:[250,500,900]}
+ shield:{name:'Starting Shield',ic:'🛡️',desc:'Start every run with a shield.',costs:[3200]},
+ heart:{name:'Extra Heart',ic:'❤️',desc:'Start every run with 4 hearts instead of 3.',costs:[8000]},
+ dur:{name:'Longer Power-Ups',ic:'⏳',desc:'Power-ups last 15% longer per level.',costs:[1600,3200,5600]},
+ mag:{name:'Stronger Magnet',ic:'🧲',desc:'The magnet reaches 20% farther per level.',costs:[1200,2400,4000]},
+ combo:{name:'Combo Keeper',ic:'🔥',desc:'+0.4 seconds to keep a combo going, per level.',costs:[2000,4000]},
+ luck:{name:'Lucky Drops',ic:'🍀',desc:'Power-ups show up 10% more often per level.',costs:[1600,3600,6400]},
+ coin:{name:'Coin Boost',ic:'🌙',desc:'Earn 10% more Moon Coins per level.',costs:[2000,4000,7200]}
 };
 const TITLES=[[1,'Rookie'],[3,'Dodger'],[6,'Orb Hunter'],[10,'Survivor'],[15,'Boss Slayer'],[20,'Arena Ace'],[30,'Legend'],[50,'99% Impossible']];
 function xpNeed(l){return 120+80*(l-1)}
@@ -451,7 +453,7 @@ const ARENA_INFO={
 };
 const MIS_BY={};MISSIONS.forEach(m=>MIS_BY[m.k]=m);
 const PET_KEYS=['cat','robot','bro','butler','gremlin'];
-const VOICES={petty:{name:'Petty',desc:'The sarcastic original. Free.',usd:null},daisy:{name:'Daisy',desc:'Sweet Southern roasts. Bless your heart.',usd:'$2.99'},mick:{name:'Mick',desc:'Loud Aussie heckler. No excuses, mate.',usd:'$2.99'}};
+const VOICES={petty:{name:'Petty',desc:'The sarcastic original. Free.',usd:null},daisy:{name:'Daisy',desc:'Sweet Southern roasts. Bless your heart.',usd:'$2.99',price:20000},mick:{name:'Mick',desc:'Loud Aussie heckler. No excuses, mate.',usd:'$2.99',price:20000}};
 const BOSS_KEYS=['blob','clock','eye','hexa','wyrm','gemini','storm','omega'];
 let prof={coins:0,themes:['neon'],pets:['cat'],skins:['orb'],theme:'neon',pet:'cat',skin:'orb',voice:true};
 function sanitizeProf(j){
@@ -1748,7 +1750,7 @@ function renderUpgrades(grid){
   const pips=el('div','pips');for(let i=0;i<max;i++)pips.appendChild(el('i',i<lv?'on':''));card.appendChild(pips);
   const bt=el('div','ibtns'),b=el('button');
   if(lv>=max){b.textContent='MAXED';b.className='on'}
-  else{const c=u.costs[lv];b.className='buy';b.textContent='🌙 '+c;b.disabled=prof.coins<c;b.onclick=()=>{if(prof.coins<c)return;prof.coins-=c;prof.up[k]=lv+1;saveProf();snd('level');buzz([20,30,20]);$('#shopNote').textContent='⬆️ '+u.name+' is now level '+(lv+1)+'!';renderShop()}}
+  else{const c=u.costs[lv];b.className='buy';b.textContent='🌙 '+c.toLocaleString();b.disabled=prof.coins<c;b.onclick=()=>{if(prof.coins<c)return;prof.coins-=c;prof.up[k]=lv+1;saveProf();snd('level');buzz([20,30,20]);$('#shopNote').textContent='⬆️ '+u.name+' is now level '+(lv+1)+'!';renderShop()}}
   bt.appendChild(b);card.appendChild(bt);grid.appendChild(card);
  });
  $('#shopNote').textContent=$('#shopNote').textContent||'Upgrades are permanent and work in every mode except the Daily Challenge.';
@@ -1758,12 +1760,12 @@ function renderVoices(grid){
  Object.keys(VOICES).forEach(k=>{
   const it=VOICES[k],have=prof.voices.includes(k),eq=prof.vc===k,card=el('div','item'+(eq?' eq':''));
   card.appendChild(el('h4','','🎙️ '+it.name));card.appendChild(el('p','',it.desc));
-  const bt=el('div','ibtns'),hear=el('button','','▶ Hear');hear.onclick=()=>Petty.preview(k);bt.appendChild(hear);
+  const hear=el('button','hearb','▶ Hear '+it.name);hear.onclick=()=>Petty.preview(k);card.appendChild(hear);const bt=el('div','ibtns');
   const b=el('button');
   if(eq){b.textContent='Equipped';b.className='on'}
   else if(have){b.textContent='Equip';b.onclick=()=>{prof.vc=k;saveProf();renderShop()}}
-  else{b.className='usd';b.textContent=it.usd;b.onclick=()=>demoBuy(it.name+' voice pack',it.usd,()=>{if(!prof.voices.includes(k))prof.voices.push(k);prof.vc=k;saveProf();$('#shopNote').textContent='✅ Unlocked '+it.name+'!';renderShop()},'voice_'+k)}
-  bt.appendChild(b);card.appendChild(bt);grid.appendChild(card);
+  else{const cb2=el('button','buy','🌙 '+it.price.toLocaleString());cb2.disabled=prof.coins<it.price;cb2.onclick=()=>{if(prof.coins<it.price)return;prof.coins-=it.price;if(!prof.voices.includes(k))prof.voices.push(k);prof.vc=k;saveProf();snd('level');$('#shopNote').textContent='✅ Unlocked '+it.name+'!';renderShop()};b._c=cb2;b.className='usd';b.textContent=it.usd;b.onclick=()=>demoBuy(it.name+' voice pack',it.usd,()=>{if(!prof.voices.includes(k))prof.voices.push(k);prof.vc=k;saveProf();$('#shopNote').textContent='✅ Unlocked '+it.name+'!';renderShop()},'voice_'+k)}
+  bt.appendChild(b);if(b._c)bt.appendChild(b._c);card.appendChild(bt);grid.appendChild(card);
  });
 }
 function themePrev(t){const W2=170,H2=110,cv2=el('canvas');cv2.width=W2*2;cv2.height=H2*2;const c=cv2.getContext('2d');c.scale(2,2);
@@ -1797,7 +1799,7 @@ function renderShop(){
   if(eq){b.textContent='Equipped';b.className='on'}
   else if(have){b.textContent='Equip';b.onclick=()=>{equip();saveProf();renderShop()}}
   else if(it.special){b.textContent='🏆 Weekly top 3 only';b.disabled=true;b.style.opacity=.6}
-  else{b.className='buy';b.textContent='🌙 '+it.price;b.disabled=prof.coins<it.price;b.onclick=()=>{if(prof.coins<it.price)return;prof.coins-=it.price;owned.push(k);equip();saveProf();snd('level');$('#shopNote').textContent='';renderShop()};
+  else{b.className='buy';b.textContent='🌙 '+it.price.toLocaleString();b.disabled=prof.coins<it.price;b.onclick=()=>{if(prof.coins<it.price)return;prof.coins-=it.price;owned.push(k);equip();saveProf();snd('level');$('#shopNote').textContent='';renderShop()};
    bt.appendChild(usdBtn(it.usd||'$0.99',it.name+(skins?' skin':' color pack'),()=>{if(!owned.includes(k))owned.push(k);equip();saveProf();$('#shopNote').textContent='✅ Unlocked '+it.name+(webMode?'!':' (demo purchase).');renderShop()},(skins?'skin_':'theme_')+k))}
   bt.appendChild(b);card.appendChild(bt);grid.appendChild(card);
  });
