@@ -280,7 +280,7 @@ input:focus{border-color:var(--cyan)}
      <p id="xpMsg"></p>
      <div id="rankBox"></div>
      <button class="big" id="again">PLAY AGAIN</button>
-     <div class="row2"><button class="sec" id="shareBtn">📣 Challenge a friend</button></div>
+     <div class="row2"><button class="sec" id="shareBtn">📣 Challenge a friend</button><button class="sec" id="cardBtn">🖼️ Score card</button></div>
      <textarea id="shareTxt" class="hidden" readonly></textarea>
      <div class="row2"><button class="sec" id="overMenu">Menu</button><button class="sec" id="overShop">🛒 Shop</button><button class="sec" id="overLb">🏆 Board</button></div>
     </div>
@@ -1100,7 +1100,7 @@ function finishGame(){
   $('#oScore').textContent=fmtMetric(mode,metric);$('#oLevel').textContent=mode==='boss'?G.bossKills:G.level;
   $('#coinMsg').textContent=(earned+dailyBonus)?'+'+(earned+dailyBonus)+' 🌙 Moon Coins'+(dailyBonus?' (incl. +50 daily bonus)':'')+'  ·  You have '+prof.coins.toLocaleString():'';
   $('#xpMsg').textContent='+'+xpGain+' XP'+(after>before?'  ·  🎉 LEVEL UP! Lv '+after+' '+titleFor(after)+' · +'+lvlCoins+' 🌙':'');if(after>before){snd('fanfare');buzz([40,40,40,40,120])}
-  $('#shareBtn').textContent=CH&&mode===CH.m?'⚔️ Send a challenge back to '+CH.n:'📣 Challenge a friend';$('#shareTxt').classList.add('hidden');renderPCard();
+  $('#shareBtn').textContent=CH&&mode===CH.m?'⚔️ Send a challenge back to '+CH.n:'📣 Challenge a friend';$('#shareTxt').classList.add('hidden');$('#cardBtn').textContent='🖼️ Score card';renderPCard();
   $('#over').classList.remove('hidden');renderOverRank();
   const prevBest=bests[mode]?Object.assign({},bests[mode]):null;
   submitScore(mode,metric,G.level,G.bossKills);
@@ -1653,6 +1653,32 @@ $('#shareBtn').onclick=()=>{
  if(TOUCH&&navigator.share){navigator.share({title:'Beat me in Infinite Arena',text:txt}).then(()=>{$('#shareBtn').textContent='✅ Challenge sent!'},()=>{});return}
  try{navigator.clipboard.writeText(txt).then(done,()=>{ta.classList.remove('hidden');ta.select();$('#shareBtn').textContent='Copy the message below'})}catch(e){ta.classList.remove('hidden');ta.select()}
 };
+/* Score card: a 1080x1350 image of this run, for Stories/TikTok/group chats */
+const CARD_TAGS=[['Petty says: "Lucky run. Prove me wrong."','Daisy says: "Honestly? Adorable attempt."','Mick says: "Mate. MATE. Beat that."'],['Petty says: "99% of you will fold. Go on."','Daisy says: "Bet you can’t, sweetie."','Mick says: "Bring a mate. You’ll need one."']];
+function makeCard(){
+ const m=G.mode,v=metricOf(),c=document.createElement('canvas');c.width=1080;c.height=1350;const x=c.getContext('2d');
+ const g=x.createLinearGradient(0,0,1080,1350);g.addColorStop(0,'#0b0e22');g.addColorStop(1,'#241046');x.fillStyle=g;x.fillRect(0,0,1080,1350);
+ x.globalAlpha=.18;for(let i=0;i<46;i++){const r=6+((i*37)%28);x.fillStyle=i%3?'#ff3d6e':'#7c5cff';x.beginPath();x.arc((i*233)%1080,(i*389)%1350,r,0,7);x.fill()}x.globalAlpha=1;
+ x.textAlign='center';x.fillStyle='#fff';
+ x.font='900 64px system-ui,sans-serif';x.fillText('99% IMPOSSIBLE',540,150);
+ x.font='700 40px system-ui,sans-serif';x.fillStyle='#9aa4ff';x.fillText('INFINITE ARENA',540,205);
+ x.font='700 46px system-ui,sans-serif';x.fillStyle='#ffd54a';x.fillText(MODES[m].ic+' '+MODES[m].name.toUpperCase()+(m==='daily'?' · '+dayStr():''),540,330);
+ x.fillStyle='#fff';x.font='900 '+(String(fmtMetric(m,v)).length>7?170:210)+'px system-ui,sans-serif';x.shadowColor='#ff3d6e';x.shadowBlur=40;x.fillText(m==='boss'?String(G.bossKills):fmtMetric(m,v),540,560);x.shadowBlur=0;
+ x.font='600 44px system-ui,sans-serif';x.fillStyle='#c9cdf5';x.fillText(m==='survival'?'survived':m==='boss'?(G.bossKills===1?'boss beaten':'bosses beaten'):'points · level '+G.level,540,630);
+ const stats=[];if(G.ncBest>=3)stats.push('🔥 '+G.ncBest+'x close-call chain');if(G.bossKills&&m!=='boss')stats.push('👹 '+G.bossKills+' boss'+(G.bossKills>1?'es':''));if(G.perfectTotal)stats.push('✨ '+G.perfectTotal+' perfect');
+ x.font='600 40px system-ui,sans-serif';x.fillStyle='#fff';x.fillText(stats.slice(0,2).join('   '),540,735);
+ x.font='800 54px system-ui,sans-serif';x.fillStyle='#fff';x.fillText('by '+playerName(),540,860);
+ const tags=CARD_TAGS[v%2],t=tags[(G.level+G.bossKills)%3];x.font='italic 600 38px system-ui,sans-serif';x.fillStyle='#ffb3c6';x.fillText(t,540,960);
+ x.fillStyle='#ff3d6e';const bx=140,by=1060,bw=800,bh=120;x.beginPath();x.roundRect?x.roundRect(bx,by,bw,bh,60):x.rect(bx,by,bw,bh);x.fill();
+ x.fillStyle='#fff';x.font='900 54px system-ui,sans-serif';x.fillText('THINK YOU CAN BEAT IT?',540,1138);
+ x.font='600 38px system-ui,sans-serif';x.fillStyle='#9aa4ff';x.fillText(GAME_URL.replace(/^https?:\/\//,''),540,1260);
+ return c}
+$('#cardBtn').onclick=()=>{
+ if(!G)return;let c;try{c=makeCard()}catch(e){return}
+ c.toBlob(b=>{if(!b)return;const f=new File([b],'infinite-arena-score.png',{type:'image/png'});
+  const url=GAME_URL+(!window.claude&&metricOf()>0?'/?vs='+encodeURIComponent(playerName())+'&m='+G.mode+'&s='+metricOf()+'&utm_source=card':'');
+  if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],text:'Beat me in 99% Impossible: Infinite Arena '+url}).then(()=>{$('#cardBtn').textContent='✅ Shared!'},()=>{});return}
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=f.name;document.body.appendChild(a);a.click();a.remove();$('#cardBtn').textContent='✅ Saved!';setTimeout(()=>URL.revokeObjectURL(a.href),4000)},'image/png')};
 $('#again').onclick=()=>{startGame(G&&G.mode?G.mode:selMode)};
 function renderPCard(){
  const li=lvlInfo(prof.xp),box=$('#pcard');box.innerHTML='';
