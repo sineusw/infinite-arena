@@ -1090,36 +1090,32 @@ addEventListener('message',e=>{const d=e.data;if(e.origin!==location.origin||!d)
  if(d.type==='ia-cancel'){payWait=null;setPayNote('Payment canceled. No charge was made.');return}
  if(d.type==='ia-paid'&&payWait&&d.item===payWait.id&&grantSid(d.sid)){const f=payWait.onOk;payWait=null;snd('coin');snd('fanfare');buzz([30,40,30,40,80]);f()}});
 setTimeout(()=>{try{const p=JSON.parse(lsGet('ia_pending')||'null');if(!p)return;localStorage.removeItem('ia_pending');if(p.type==='ia-paid'&&grantSid(p.sid)){grantItem(p.item);snd('coin')}}catch(e){}},0);
-/* ===== iOS app: Apple In-App Purchase (RevenueCat), rewarded ads (AdMob), restore ===== */
-const APP_CFG={rcKey:'appl_REPLACE_WITH_REVENUECAT_KEY',prodPrefix:'com.pettygamesstudios.infinitearena.',adUnit:'ca-app-pub-3940256099942544/1712485313',adTesting:true};
-let rcReady=null;
-function rc(){if(!NATIVE||!NP.Purchases)return Promise.reject(new Error('Purchases unavailable'));if(!rcReady)rcReady=NP.Purchases.configure({apiKey:APP_CFG.rcKey,appUserID:webId()}).catch(e=>{rcReady=null;throw e});return rcReady}
-function grantOwned(info){(info&&info.nonSubscriptionTransactions||[]).forEach(t=>{const id=String(t.productIdentifier||'').replace(APP_CFG.prodPrefix,'');if(/^(skin|theme|voice)_/.test(id))grantItem(id)})}
+/* ===== iOS app: Apple In-App Purchase (StoreKit via @capgo/native-purchases), restore ===== */
+const APP_CFG={prodPrefix:'com.pettygamesstudios.infinitearena.'};
+const NPu=()=>NATIVE&&NP.NativePurchases;
+function grantOwned(list){(list||[]).forEach(t=>{const id=String(t.productIdentifier||'').replace(APP_CFG.prodPrefix,'');if(/^(skin|theme|voice)_/.test(id))grantItem(id)})}
 async function nativeBuy(id,onOk){setPayNote('Opening App Store…');
- try{await rc();const pid=APP_CFG.prodPrefix+id,{products}=await NP.Purchases.getProducts({productIdentifiers:[pid],type:'NON_SUBSCRIPTION'});
-  if(!products||!products.length)throw new Error('This item isn’t available yet.');
-  await NP.Purchases.purchaseStoreProduct({product:products[0]});setPayNote('✅ Purchase complete!');snd('coin');snd('fanfare');buzz([30,40,30,40,80]);onOk()}
- catch(e){setPayNote(e&&(e.userCancelled||e.code==='1'||/cancel/i.test(e.message||''))?'Purchase canceled. No charge was made.':'⚠ '+((e&&e.message)||'Purchase failed.'))}}
-async function restoreBuys(){setPayNote('Restoring…');try{await rc();const {customerInfo}=await NP.Purchases.restorePurchases();grantOwned(customerInfo);saveProf();renderShop();setPayNote('✅ Purchases restored.');$('#restoreBtn').textContent='✅ Restored'}catch(e){$('#restoreBtn').textContent='⚠ Couldn’t restore. Try again.'}}
-let adReady=false;
-async function adInit(){if(!NATIVE||!NP.AdMob)return;try{await NP.AdMob.initialize({initializeForTesting:APP_CFG.adTesting});try{const st=await NP.AdMob.trackingAuthorizationStatus();if(st&&st.status==='notDetermined')await NP.AdMob.requestTrackingAuthorization()}catch(e){}adPrep()}catch(e){}}
-async function adPrep(){try{await NP.AdMob.prepareRewardVideoAd({adId:APP_CFG.adUnit,isTesting:APP_CFG.adTesting});adReady=true}catch(e){adReady=false}}
-async function showRewarded(){if(!adReady)await adPrep();if(!adReady)return false;adReady=false;try{const rw=await NP.AdMob.showRewardVideoAd();adPrep();return !!rw}catch(e){adPrep();return false}}
-if(NATIVE){$('#restoreBtn').classList.remove('hidden');$('#restoreBtn').onclick=restoreBuys;setTimeout(adInit,1500);document.addEventListener('pause',()=>{try{if(G&&G.phase==='play')togglePause(true)}catch(e){}})}
+ try{const P=NPu();if(!P)throw new Error('Purchases unavailable');const pid=APP_CFG.prodPrefix+id;
+  await P.purchaseProduct({productIdentifier:pid,productType:'inapp',quantity:1});
+  setPayNote('✅ Purchase complete!');snd('coin');snd('fanfare');buzz([30,40,30,40,80]);onOk()}
+ catch(e){const m=(e&&e.message)||'';setPayNote(/cancel/i.test(m)?'Purchase canceled. No charge was made.':'⚠ '+(m||'Purchase failed.'))}}
+async function restoreBuys(){setPayNote('Restoring…');try{const P=NPu();await P.restorePurchases();const r=await P.getPurchases({productType:'inapp'});grantOwned(r&&r.purchases);saveProf();renderShop();setPayNote('✅ Purchases restored.');$('#restoreBtn').textContent='✅ Restored'}catch(e){$('#restoreBtn').textContent='⚠ Couldn’t restore. Try again.'}}
+if(NATIVE){$('#restoreBtn').classList.remove('hidden');$('#restoreBtn').onclick=restoreBuys;document.addEventListener('pause',()=>{try{if(G&&G.phase==='play')togglePause(true)}catch(e){}})}
 function demoBuy(item,price,onOk,id){if(NATIVE&&id){nativeBuy(id,onOk);return}if(webMode&&id){realBuy(id,onOk);return}dpOk=onOk;$('#dpItem').textContent=item;$('#dpPrice').textContent=price;$('#dpPay').disabled=false;$('#dpPay').textContent='PAY (DEMO)';$('#demoPay').classList.remove('hidden')}
 $('#dpCancel').onclick=()=>{dpOk=null;$('#demoPay').classList.add('hidden')};
 $('#dpPay').onclick=()=>{const f=dpOk;if(!f)return;dpOk=null;$('#dpPay').disabled=true;$('#dpPay').textContent='Processing…';setTimeout(()=>{$('#demoPay').classList.add('hidden');snd('coin');snd('fanfare');buzz([30,40,30,40,80]);f()},900)};
 function showRevive(){
  $('#adBox').classList.add('hidden');$('#revOpts').classList.remove('hidden');$('#noRow').classList.remove('hidden');$('#revNote').textContent='';
  const used=!!G.adUsed;$('#watchAd').classList.toggle('hidden',used);
- $('#revTag').textContent=used?'You used your free ad revive this run. Buy hearts to keep going.':'Watch a short ad for 1 free heart, or buy hearts. You keep your score.';
+ $('#watchAd').textContent=NATIVE?'❤️ FREE REVIVE · ONCE PER RUN':'▶ WATCH A VIDEO · REVIVE WITH 1 ❤️';
+ $('#revTag').textContent=used?'You used your free revive this run. Buy hearts to keep going.':NATIVE?'Take 1 free heart (once per run) or buy hearts. You keep your score.':'Watch a short ad for 1 free heart, or buy hearts. You keep your score.';
  $('#revive').classList.remove('hidden');
 }
 document.querySelectorAll('#revOpts .usdb').forEach(b=>b.onclick=()=>{const n=+b.dataset.h,price=b.textContent.replace(/^.*\$/,'$');demoBuy(n+' heart'+(n>1?'s':'')+' · revive now',price,()=>{revive(n,true)},'hearts'+n)});
 $('#watchAd').onclick=()=>{
+ if(NATIVE){G.adUsed=true;revive();return}
  G.adUsed=true;$('#revOpts').classList.add('hidden');$('#noRow').classList.add('hidden');
  Petty.adBefore(()=>{if(!G||G.phase!=='over'||$('#revive').classList.contains('hidden'))return;
- if(NATIVE&&NP.AdMob){showRewarded().then(ok=>{if(!G||G.phase!=='over')return;if(ok){revive();Petty.adAfter()}else{G.adUsed=false;$('#revOpts').classList.remove('hidden');$('#noRow').classList.remove('hidden');$('#revNote').textContent='No ad available right now. Try again or buy hearts.'}});return}
  $('#adBox').classList.remove('hidden');
  let n=10;$('#adCount').textContent='Reviving in '+n+'…';clearInterval(adTimer);
  adTimer=setInterval(()=>{n--;if(n<=0){clearInterval(adTimer);revive();Petty.adAfter()}else $('#adCount').textContent='Reviving in '+n+'…'},1000)});
