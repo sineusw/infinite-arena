@@ -4,3 +4,4 @@
 - Ice & wind arenas removed so controls stay identical every level. ARENAS=['normal','lava','shrink'].
 - Real-money buttons + video revive are demo placeholders.
 - Daily mode uses seeded RNG (mulberry32/hashStr). LOWFX disables glow on touch devices.
+- 2026-11-22: Challenge links. Share now sends ?vs=name&m=mode&s=score&utm_source=challenge (native share sheet on phones). Opening one shows a '⚔️ X challenges you' menu banner, an in-game 'Beat X in N' target, a beat/short line on game over and a 'Send a challenge back' button. Track virality via utm_source=challenge in Vercel Analytics.
