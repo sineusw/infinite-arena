@@ -117,6 +117,7 @@ input:focus{border-color:var(--cyan)}
 .res div{flex:1;background:#0b0e1c;border:1px solid var(--line);border-radius:12px;padding:12px}
 .res small{display:block;font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
 .res b{font-family:Orbitron;font-size:22px}
+#closeMsg{font-size:16px;font-weight:800;color:var(--gold,#ffd34d);margin:4px 0 8px;animation:cmPulse 1.2s ease-in-out infinite}@keyframes cmPulse{50%{transform:scale(1.06)}}
 #postMsg{min-height:22px;font-size:14px;color:var(--muted);margin-bottom:6px}
 #postMsg.good{color:var(--green)}
 #coinMsg{min-height:20px;font-size:14px;color:#ffe7a0;margin-bottom:12px;font-weight:600}
@@ -254,6 +255,7 @@ input:focus{border-color:var(--cyan)}
     <div class="card">
      <h2>GAME OVER</h2>
      <div class="res"><div><small id="oL1">Score</small><b id="oScore">0</b></div><div><small id="oL2">Level</small><b id="oLevel">1</b></div></div>
+     <p id="closeMsg" class="hidden"></p>
      <p id="postMsg"></p>
      <p id="coinMsg"></p>
      <p id="xpMsg"></p>
@@ -972,7 +974,7 @@ function hit(){
  if(G.inv>0||G.pu.ghost>0||G.phase!=='play')return;
  if(G.shield){G.shield=false;G.inv=1;burst(P.x,P.y,T.pu,30,240);snd('pu');buzz(60);setMsg('🛡️ Shield blocked the hit!','good');return}
  if(G.tutorial){G.inv=1.2;G.shake=.3;snd('hit');burst(P.x,P.y,T.enemy,24,220);setMsg('Ouch! In a real game that costs a heart.','bad',2.5);return}
- G.lives--;G.lvHit=true;G.perfect=0;G.inv=1.6;G.shake=.35;G.combo=0;G.comboT=0;snd('hit');burst(P.x,P.y,T.enemy,36,260);
+ G.lives--;G.lvHit=true;G.perfect=0;G.nc=0;G.ncT=0;G.inv=1.6;G.shake=.35;G.combo=0;G.comboT=0;snd('hit');burst(P.x,P.y,T.enemy,36,260);
  buzz([120,60,120]);G.hflash=.35;
  hud();
  if(G.lives<=0){gameOver();return}
@@ -1000,7 +1002,7 @@ function bossDefeated(){
 }
 function gameOver(){
  G.phase='over';snd('over');buzz([200,80,300]);setMsg('Out of lives!','bad',99);
- if(!G.tutorial){const lv=G.revives||0;setTimeout(()=>{if(G&&G.phase==='over'&&(G.revives||0)===lv)showRevive()},700);return}
+ if(!G.tutorial){const lv=G.revives||0;setTimeout(()=>{if(G&&G.phase==='over'&&(G.revives||0)===lv)showRevive()},450);return}
  finishGame();
 }
 let adTimer=null;
@@ -1048,6 +1050,14 @@ function revive(n,paid){
  [...G.b,...G.ch,...G.da].forEach(e=>{const q=Math.max(1,dist(e.x,e.y,P.x,P.y));if(q<180){e.x=clamp(P.x+(e.x-P.x)/q*180,e.r,W-e.r);e.y=clamp(P.y+(e.y-P.y)/q*180,e.r,H-e.r)}});
  G.phase='intro';G.t=1.2;snd('pu');buzz([40,40,40]);setMsg('💖 Back in with '+G.lives+' heart'+(G.lives>1?'s':'')+'! Good luck.','good',2.5);lastHud='';hud();
 }
+function showClose(mode,metric,prevBest){
+ const box=$('#closeMsg'),out=[];
+ if(prevBest&&metric<prevBest.score){const gap=prevBest.score-metric,pct=gap/Math.max(1,prevBest.score);
+  if(pct<=.35)out.push('🔥 Only '+(mode==='survival'?fmtTime(gap):gap.toLocaleString()+(mode==='boss'?' boss'+(gap>1?'es':''):' points'))+' from your best!')}
+ const li=lvlInfo(prof.xp),left=li.need-li.into;if(left/li.need<=.3)out.push('⭐ '+left.toLocaleString()+' XP to Lv '+(li.l+1)+'. One more run!');
+ if(G.ncBest>=5)out.push('😈 '+G.ncBest+' close calls in a row!');
+ box.textContent=out.slice(0,2).join('  ·  ');box.classList.toggle('hidden',!out.length);
+}
 function finishGame(){
  const mode=G.mode,metric=metricOf();
  if(mode==='survival')track('survive',Math.floor(G.survT));
@@ -1070,7 +1080,8 @@ function finishGame(){
   submitScore(mode,metric,G.level,G.bossKills);
   try{Petty.result(mode,metric,prevBest)}catch(e){}
   if(mode==='classic')submitWeekly(metric,G.level);
- },900);
+  showClose(mode,metric,prevBest);
+ },400);
 }
 function grabPU(k){
  const d=PU[k];snd('pu');buzz([20,30,20]);track('pu',1);burst(P.x,P.y,puCol(k),24,200);setMsg(d.ic+' '+d.name+'! '+d.desc,'good',2.5);
@@ -1129,6 +1140,7 @@ $('#menuTut').onclick=()=>{lsSet('ia_name',nameEl.value.trim());startTutorial()}
 const SPEED=0.65; // one set speed for touch and keyboard
 const keys={};let ptr=null,touchId=null;
 addEventListener('keydown',e=>{
+ if(!$('#over').classList.contains('hidden')&&[' ','enter','r'].includes(e.key.toLowerCase())){e.preventDefault();$('#again').click();return}
  if(document.activeElement&&document.activeElement.tagName==='INPUT'&&document.activeElement.type!=='checkbox'){if(e.key==='Enter'){e.preventDefault();$('#play').click()}return}
  const k=e.key.toLowerCase();
  if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();
@@ -1169,7 +1181,10 @@ function slowMo(){if(!G||G.tutorial||G.smCd>0)return;G.sm=.5;G.smCd=6;pop(P.x,P.
 function nearCheck(e){
  if(e.nm&&G.clock<e.nm)return;
  const g=dist(P.x,P.y,e.x,e.y)-(P.r+e.r);
- if(g>0&&g<9){e.nm=G.clock+1.5;const v=addScore(5*G.level);pop(P.x,P.y-18,'CLOSE! +'+v,T.orb);snd('near');buzz(8);track('near',1)}
+ if(g>0&&g<9){e.nm=G.clock+1.5;G.nc=(G.ncT>0?(G.nc||0):0)+1;G.ncT=2.5;G.ncBest=Math.max(G.ncBest||0,G.nc);
+  const c=G.nc,v=addScore(5*G.level*Math.min(c,10));pop(P.x,P.y-18,(g<4?'RAZOR!':'CLOSE!')+(c>1?' x'+c:'')+' +'+v,c>=3?T.pu:T.orb);snd('near');buzz(c>=3?8+c*2:8);track('near',1);
+  if(c===3||c===5||c===8||c===12){const t=c>=12?'UNTOUCHABLE':c>=8?'MADMAN':c>=5?'DAREDEVIL':'RISKY';pop(P.x,P.y-40,t+' x'+c+'!',T.pu);snd('fanfare');buzz([15,20,15,20,40]);G.flash=.12;burst(P.x,P.y,T.pu,14+c*2,200)}
+  if(g<4)slowMo()}
 }
 /* ---------- joystick (phones/tablets) ---------- */
 const TOUCH=(()=>{try{return matchMedia('(pointer: coarse)').matches||'ontouchstart' in window}catch(e){return false}})();
@@ -1245,6 +1260,7 @@ function update(dt){
  for(const k in G.pu)G.pu[k]=Math.max(0,G.pu[k]-dt);
  for(const k in G.db)G.db[k]=Math.max(0,G.db[k]-dt);
  if(G.comboT>0){G.comboT-=dt;if(G.comboT<=0){G.combo=0;hud()}}
+ if(G.ncT>0){G.ncT-=dt;if(G.ncT<=0)G.nc=0}
  const edt=dt*(G.pu.slow>0?0.4:1)*(G.db.turbo>0?1.4:1);
  P.r=(G.pu.shrink>0?6:(G.twist==='tiny'?7.5:11))*(G.db.big>0?1.6:1);
  movePlayer(dt);
