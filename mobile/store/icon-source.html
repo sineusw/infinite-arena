@@ -1,0 +1,85 @@
+<!DOCTYPE html><html><head><link href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap" rel="stylesheet">
+<style>html,body{margin:0;width:1024px;height:1024px;overflow:hidden;background:#000}svg{display:block}</style></head><body>
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+<defs>
+ <radialGradient id="bg" cx="62%" cy="38%" r="80%">
+  <stop offset="0" stop-color="#ff3fa4"/><stop offset=".28" stop-color="#9b2cff"/><stop offset=".62" stop-color="#2a0f8f"/><stop offset="1" stop-color="#07041c"/>
+ </radialGradient>
+ <radialGradient id="hero" cx="35%" cy="30%" r="75%">
+  <stop offset="0" stop-color="#ffffff"/><stop offset=".18" stop-color="#bff9ff"/><stop offset=".5" stop-color="#2fe3ff"/><stop offset=".85" stop-color="#0a8bff"/><stop offset="1" stop-color="#0656d6"/>
+ </radialGradient>
+ <radialGradient id="enemy" cx="38%" cy="32%" r="75%">
+  <stop offset="0" stop-color="#fff1c2"/><stop offset=".3" stop-color="#ff7a3d"/><stop offset=".75" stop-color="#ff1e56"/><stop offset="1" stop-color="#a1003a"/>
+ </radialGradient>
+ <linearGradient id="txt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff7a8"/><stop offset=".45" stop-color="#ffd23f"/><stop offset="1" stop-color="#ff8a00"/></linearGradient>
+ <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="28"/></filter>
+ <filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="10"/></filter>
+ <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="18" stdDeviation="14" flood-color="#0a0330" flood-opacity=".75"/></filter>
+ <clipPath id="heroClip"><circle cx="430" cy="560" r="250"/></clipPath>
+</defs>
+<rect width="1024" height="1024" fill="url(#bg)"/>
+<!-- sunburst rays -->
+<g transform="translate(640,390)" opacity=".16">
+ <g id="rays"></g>
+</g>
+<!-- grid floor -->
+<g opacity=".22" stroke="#7fd8ff" stroke-width="3">
+ <path d="M0 880 L1024 880 M0 930 L1024 930 M0 985 L1024 985"/>
+ <path d="M512 820 L-200 1024 M512 820 L100 1024 M512 820 L400 1024 M512 820 L624 1024 M512 820 L924 1024 M512 820 L1224 1024"/>
+</g>
+<!-- speed streaks behind hero -->
+<g stroke-linecap="round" opacity=".9">
+ <line x1="40" y1="760" x2="250" y2="660" stroke="#5ff0ff" stroke-width="26" opacity=".55"/>
+ <line x1="10" y1="640" x2="200" y2="560" stroke="#5ff0ff" stroke-width="18" opacity=".4"/>
+ <line x1="110" y1="880" x2="300" y2="780" stroke="#5ff0ff" stroke-width="14" opacity=".35"/>
+</g>
+<!-- enemy glow + trail -->
+<circle cx="780" cy="270" r="200" fill="#ff2e6e" filter="url(#glow)" opacity=".8"/>
+<g stroke-linecap="round" stroke="#ff7aa8" opacity=".7"><line x1="1010" y1="150" x2="900" y2="200" stroke-width="22"/><line x1="1024" y1="250" x2="930" y2="275" stroke-width="16"/><line x1="1000" y1="60" x2="890" y2="130" stroke-width="12"/></g>
+<!-- enemy spiky -->
+<g transform="translate(780,270) rotate(12)" filter="url(#shadow)">
+ <polygon id="spike" fill="url(#enemy)" stroke="#2a0018" stroke-width="12" stroke-linejoin="round"/>
+ <!-- angry face -->
+ <path d="M-62 -28 L-18 -6" stroke="#2a0018" stroke-width="14" stroke-linecap="round"/>
+ <path d="M62 -28 L18 -6" stroke="#2a0018" stroke-width="14" stroke-linecap="round"/>
+ <circle cx="-34" cy="14" r="13" fill="#2a0018"/><circle cx="34" cy="14" r="13" fill="#2a0018"/>
+ <path d="M-30 58 Q0 38 30 58" stroke="#2a0018" stroke-width="12" fill="none" stroke-linecap="round"/>
+</g>
+<!-- hero glow -->
+<circle cx="430" cy="560" r="300" fill="#2fe3ff" filter="url(#glow)" opacity=".75"/>
+<!-- hero -->
+<g filter="url(#shadow)">
+ <circle cx="430" cy="560" r="250" fill="url(#hero)" stroke="#06103a" stroke-width="16"/>
+ <g clip-path="url(#heroClip)"><ellipse cx="470" cy="760" rx="300" ry="120" fill="#0040b0" opacity=".35"/></g>
+ <ellipse cx="350" cy="430" rx="80" ry="44" fill="#fff" opacity=".85" transform="rotate(-28 350 430)"/>
+ <!-- eyes looking at enemy -->
+ <ellipse cx="385" cy="540" rx="54" ry="66" fill="#fff" stroke="#06103a" stroke-width="10"/>
+ <ellipse cx="525" cy="525" rx="54" ry="66" fill="#fff" stroke="#06103a" stroke-width="10"/>
+ <circle cx="408" cy="515" r="27" fill="#06103a"/><circle cx="548" cy="500" r="27" fill="#06103a"/>
+ <circle cx="417" cy="505" r="9" fill="#fff"/><circle cx="557" cy="490" r="9" fill="#fff"/>
+ <!-- brows -->
+ <path d="M330 455 Q378 430 425 452" stroke="#06103a" stroke-width="16" fill="none" stroke-linecap="round"/>
+ <path d="M478 440 Q525 412 575 432" stroke="#06103a" stroke-width="16" fill="none" stroke-linecap="round"/>
+ <!-- gritted grin -->
+ <path d="M390 640 Q460 690 540 628 L532 660 Q462 714 396 668 Z" fill="#fff" stroke="#06103a" stroke-width="10" stroke-linejoin="round"/>
+ <path d="M420 652 L418 678 M455 660 L455 690 M492 655 L494 684" stroke="#06103a" stroke-width="6"/>
+ <!-- sweat drop -->
+ <path d="M262 450 Q290 490 274 515 Q252 535 234 512 Q224 490 262 450 Z" fill="#c9f4ff" stroke="#06103a" stroke-width="8"/>
+</g>
+<!-- close-call spark -->
+<g transform="translate(640,385)">
+ <circle r="70" fill="#fff3a0" filter="url(#soft)" opacity=".9"/>
+ <polygon points="0,-95 18,-22 90,-30 28,8 60,78 0,32 -60,78 -28,8 -90,-30 -18,-22" fill="#fff6b0" stroke="#ff9d00" stroke-width="8" stroke-linejoin="round"/>
+</g>
+<!-- 99% -->
+<g transform="translate(512,900) rotate(-6)">
+ <text text-anchor="middle" font-family="Lilita One" font-size="250" fill="#ff2e6e" opacity=".55" filter="url(#glow)">99%</text>
+ <text text-anchor="middle" y="16" font-family="Lilita One" font-size="250" fill="#0a0330" opacity=".8">99%</text>
+ <text text-anchor="middle" font-family="Lilita One" font-size="250" fill="url(#txt)" stroke="#0a0330" stroke-width="22" paint-order="stroke" stroke-linejoin="round">99%</text>
+ <text text-anchor="middle" font-family="Lilita One" font-size="250" fill="none" stroke="#fffbe0" stroke-width="4" opacity=".7">99%</text>
+</g>
+</svg>
+<script>
+const r=document.getElementById('rays');for(let i=0;i<18;i++){const p=document.createElementNS('http://www.w3.org/2000/svg','polygon');p.setAttribute('points','0,0 -60,-900 60,-900');p.setAttribute('fill','#fff');p.setAttribute('transform','rotate('+(i*20)+')');r.appendChild(p)}
+const s=document.getElementById('spike'),pts=[];for(let i=0;i<24;i++){const a=i*Math.PI/12,rr=i%2?118:150;pts.push((Math.cos(a)*rr).toFixed(1)+','+(Math.sin(a)*rr).toFixed(1))}s.setAttribute('points',pts.join(' '));
+</script></body></html>
