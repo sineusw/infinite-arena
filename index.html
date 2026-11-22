@@ -109,6 +109,7 @@ input:focus{border-color:var(--cyan)}
 .upic{font-size:28px;line-height:1}
 #shareTxt{width:100%;height:84px;margin-top:8px;background:#0b0e1c;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:8px;font:13px Inter}
 .lbtabs{flex-wrap:wrap}.lbtabs button{font-size:11px!important;padding:6px 3px!important;min-width:58px}
+.vs{width:100%;padding:11px;border-radius:12px;border:0;margin-bottom:12px;font-weight:800;color:#fff;background:linear-gradient(90deg,#ff3d6e,#8a3dff);box-shadow:0 0 18px rgba(255,61,110,.35);line-height:1.3}.vs small{display:block;font-weight:600;opacity:.85}
 .claim{width:100%;padding:11px;border-radius:12px;border:0;margin-bottom:12px;font-weight:800;color:#1a1000;background:linear-gradient(90deg,#ffd23f,#ff8a3d);box-shadow:0 0 18px rgba(255,180,60,.35);animation:wig 1.6s ease-in-out infinite}
 @keyframes wig{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
 .toggles{display:flex;gap:6px;margin-top:10px}.toggles button{flex:1;padding:8px 4px;border-radius:10px;border:1px solid var(--line);background:#0b0e1c;color:var(--text);font-weight:700;font-size:12.5px}.toggles button.off{color:var(--muted);opacity:.6}
@@ -214,6 +215,7 @@ input:focus{border-color:var(--cyan)}
      <h1>INFINITE<br>ARENA</h1>
      <p class="tag" style="margin-bottom:12px">The levels never end. They just get harder.</p>
      <div class="pcard" id="pcard"></div>
+     <button class="vs hidden" id="vsBtn"></button>
      <button class="claim hidden" id="claimBtn"></button>
      <label>Game mode</label><div class="modes" id="modes"></div><div id="modeDesc"></div>
      <button class="big" id="play">PLAY</button>
@@ -633,6 +635,11 @@ const MODES={
  daily:{name:'Daily',ic:'📅',desc:'Today\u2019s challenge: the same run for everyone, with a special twist. Upgrades are off so it\u2019s fair. New one every day!',col:'daily'}
 };
 let selMode=MODES[lsGet('ia_mode')]?lsGet('ia_mode'):'classic';
+/* Challenge links: ?vs=<name>&m=<mode>&s=<metric> from a friend's share */
+const CH=(()=>{try{const q=new URLSearchParams(location.search),m=q.get('m'),sc=Math.floor(Number(q.get('s')));
+ const n=(q.get('vs')||'').replace(/[\u0000-\u001f<>]/g,'').replace(/\s+/g,' ').trim().slice(0,16);
+ if(!n||!MODES[m]||!(sc>0)||sc>1e9)return null;return{n,m,s:sc}}catch(e){return null}})();
+if(CH)selMode=CH.m;
 const BOARDS=Object.assign({},MODES,{weekly:{name:'Weekly',ic:'🏆',col:'weekly'}});
 function weekId(){const d=new Date();d.setDate(d.getDate()-((d.getDay()+6)%7));return dayStr(d)}
 function weekLeft(){const d=new Date(),n=new Date(d);n.setDate(d.getDate()+(7-((d.getDay()+6)%7)));n.setHours(0,0,0,0);const ms=n-d,h=Math.floor(ms/3600000);return Math.floor(h/24)+'d '+(h%24)+'h'}
@@ -1055,6 +1062,7 @@ function showClose(mode,metric,prevBest){
  if(prevBest&&metric<prevBest.score){const gap=prevBest.score-metric,pct=gap/Math.max(1,prevBest.score);
   if(pct<=.35)out.push('🔥 Only '+(mode==='survival'?fmtTime(gap):gap.toLocaleString()+(mode==='boss'?' boss'+(gap>1?'es':''):' points'))+' from your best!')}
  const li=lvlInfo(prof.xp),left=li.need-li.into;if(left/li.need<=.3)out.push('⭐ '+left.toLocaleString()+' XP to Lv '+(li.l+1)+'. One more run!');
+ if(CH&&mode===CH.m){if(metric>CH.s)out.unshift('🏆 You beat '+CH.n+'\u2019s '+fmtMetric(mode,CH.s)+'! Send it back ⚔️');else out.unshift('⚔️ '+fmtMetric(mode,CH.s-metric)+(mode==='survival'?'':' pts')+' short of '+CH.n+'. Again!')}
  if(G.ncBest>=5)out.push('😈 '+G.ncBest+' close calls in a row!');
  box.textContent=out.slice(0,2).join('  ·  ');box.classList.toggle('hidden',!out.length);
 }
@@ -1074,7 +1082,7 @@ function finishGame(){
   $('#oScore').textContent=fmtMetric(mode,metric);$('#oLevel').textContent=mode==='boss'?G.bossKills:G.level;
   $('#coinMsg').textContent=(earned+dailyBonus)?'+'+(earned+dailyBonus)+' 🌙 Moon Coins'+(dailyBonus?' (incl. +50 daily bonus)':'')+'  ·  You have '+prof.coins.toLocaleString():'';
   $('#xpMsg').textContent='+'+xpGain+' XP'+(after>before?'  ·  🎉 LEVEL UP! Lv '+after+' '+titleFor(after)+' · +'+lvlCoins+' 🌙':'');if(after>before){snd('fanfare');buzz([40,40,40,40,120])}
-  $('#shareBtn').textContent='📣 Challenge a friend';$('#shareTxt').classList.add('hidden');renderPCard();
+  $('#shareBtn').textContent=CH&&mode===CH.m?'⚔️ Send a challenge back to '+CH.n:'📣 Challenge a friend';$('#shareTxt').classList.add('hidden');renderPCard();
   $('#over').classList.remove('hidden');renderOverRank();
   const prevBest=bests[mode]?Object.assign({},bests[mode]):null;
   submitScore(mode,metric,G.level,G.bossKills);
@@ -1564,6 +1572,9 @@ function renderInfo(){
 }
 function renderChase(){
  const e=$('#chase');
+ if(G&&!G.tutorial&&CH&&G.mode===CH.m){const cur=metricOf();e.classList.remove('hidden');e.innerHTML='';
+  if(cur>CH.s){e.append('✅ Beat ',el('b','',CH.n),'!');return}
+  e.append('Beat '+CH.n+' in ');e.append(el('b','',G.mode==='survival'?fmtTime(CH.s-cur+1):(CH.s-cur+1).toLocaleString()));if(G.mode!=='survival')e.append(' pts');return}
  if(!G||G.tutorial||!rows.length||G.mode!==lbMode){e.classList.add('hidden');return}
  const others=rows.filter(r=>r.id!==myId),cur=metricOf();
  let target=null,rank=1;
@@ -1603,9 +1614,11 @@ const GAME_URL=!window.claude&&/^https?:$/.test(location.protocol)?location.orig
 $('#shareBtn').onclick=()=>{
  if(!G)return;const m=G.mode,v=metricOf();
  const what=m==='survival'?'lasted '+fmtTime(v)+' in Survival':m==='boss'?'beat '+G.bossKills+' boss'+(G.bossKills===1?'':'es')+' in Boss Rush':m==='daily'?'scored '+v.toLocaleString()+' on today\u2019s Daily Challenge':'scored '+v.toLocaleString()+' (level '+G.level+')';
- const txt='I just '+what+' in 99% Impossible: Infinite Arena 🎮 Think you can beat me? '+GAME_URL;
+ let url=GAME_URL;if(!window.claude&&v>0)url=GAME_URL+'/?vs='+encodeURIComponent(playerName())+'&m='+m+'&s='+v+'&utm_source=challenge';
+ const txt='I just '+what+' in 99% Impossible: Infinite Arena 🎮 Think you can beat me? '+url;
  const ta=$('#shareTxt');ta.value=txt;
  const done=()=>{$('#shareBtn').textContent='✅ Copied! Paste it in a text to a friend'};
+ if(TOUCH&&navigator.share){navigator.share({title:'Beat me in Infinite Arena',text:txt}).then(()=>{$('#shareBtn').textContent='✅ Challenge sent!'},()=>{});return}
  try{navigator.clipboard.writeText(txt).then(done,()=>{ta.classList.remove('hidden');ta.select();$('#shareBtn').textContent='Copy the message below'})}catch(e){ta.classList.remove('hidden');ta.select()}
 };
 $('#again').onclick=()=>{startGame(G&&G.mode?G.mode:selMode)};
@@ -1621,6 +1634,10 @@ function renderModes(){
  $('#modeDesc').textContent=MODES[selMode].desc+(selMode==='daily'?' Today: '+todayTwist().ic+' '+todayTwist().name+'. '+todayTwist().desc:'');
 }
 renderModes();
+function renderVs(){const b=$('#vsBtn');if(!CH){b.classList.add('hidden');return}
+ b.innerHTML='';b.append('⚔️ '+CH.n+' challenges you!');b.appendChild(el('small','','Beat '+fmtMetric(CH.m,CH.s)+(CH.m==='survival'?'':' pts')+' in '+MODES[CH.m].name+' · tap to play'));b.classList.remove('hidden')}
+$('#vsBtn').onclick=()=>{lsSet('ia_name',nameEl.value.trim());nameEl.blur();snd('');selMode=CH.m;renderModes();startGame(CH.m)};
+renderVs();
 
 /* ================= SHOP ================= */
 function openShop(){$('#shopNote').textContent='';$('#shop').classList.remove('hidden');renderShop()}
