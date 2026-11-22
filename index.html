@@ -185,7 +185,7 @@ input:focus{border-color:var(--cyan)}
  .pausebtn{padding:8px 12px}
 }
 @media (max-width:420px){#cb{display:none!important}}
-#petty{position:fixed;left:50%;top:max(12px,env(safe-area-inset-top));transform:translateX(-50%);z-index:9999;max-width:min(92vw,520px);padding:9px 14px;border-radius:14px;background:rgba(10,12,28,.92);border:1px solid var(--line);color:var(--text);font-weight:700;font-size:14px;line-height:1.3;text-align:center;pointer-events:none;box-shadow:0 6px 24px rgba(0,0,0,.5)}#petty::before{content:'🎙️ Petty: ';color:var(--yellow)}#petty.hidden{display:none}
+#petty{position:fixed;left:50%;top:max(12px,env(safe-area-inset-top));transform:translateX(-50%);z-index:9999;max-width:min(92vw,520px);padding:9px 14px;border-radius:14px;background:rgba(10,12,28,.92);border:1px solid var(--line);color:var(--text);font-weight:700;font-size:14px;line-height:1.3;text-align:center;pointer-events:none;box-shadow:0 6px 24px rgba(0,0,0,.5)}#petty::before{content:'🎙️ ' attr(data-who) ': ';color:var(--yellow)}#petty.hidden{display:none}
 </style>
 </head>
 <body>
@@ -222,7 +222,7 @@ input:focus{border-color:var(--cyan)}
      <div class="daily" id="daily"></div>
      <label for="name">Your name for the leaderboard</label>
      <input id="name" maxlength="16" placeholder="Player" autocomplete="off">
-     <div class="toggles"><button id="tSound">🔊 Sound</button><button id="tMusic">🎵 Music</button><button id="tVib">📳 Vibrate</button><button id="tVoice">🗣️ Petty</button><button id="tJoy" class="hidden" style="flex:1.6">🕹️ Joystick</button></div>
+     <div class="toggles"><button id="tSound">🔊 Sound</button><button id="tMusic">🎵 Music</button><button id="tVib">📳 Vibrate</button><button id="tVoice">🗣️ Voice</button><button id="tJoy" class="hidden" style="flex:1.6">🕹️ Joystick</button></div>
      <p class="credit">Game idea by Luke</p>
     </div>
    </div>
@@ -283,7 +283,7 @@ input:focus{border-color:var(--cyan)}
    <div class="ov hidden" id="shop">
     <div class="card wide">
      <div class="shophead"><h2>🛒 SHOP</h2><span class="coins" id="coinBal" style="margin:0">🌙 0</span></div>
-     <div class="tabs" id="shopTabs"><button data-tab="skins" class="on">⚪ Skins</button><button data-tab="up">⬆️ Upgrades</button><button data-tab="themes">🎨 Colors</button></div>
+     <div class="tabs" id="shopTabs"><button data-tab="skins" class="on">⚪ Skins</button><button data-tab="up">⬆️ Upgrades</button><button data-tab="themes">🎨 Colors</button><button data-tab="voices">🎙️ Voices</button></div>
      <div id="shopGrid"></div>
      <p id="shopNote"></p>
      <button class="big" id="shopClose">DONE</button>
@@ -398,6 +398,7 @@ const ARENA_INFO={
 };
 const MIS_BY={};MISSIONS.forEach(m=>MIS_BY[m.k]=m);
 const PET_KEYS=['cat','robot','bro','butler','gremlin'];
+const VOICES={petty:{name:'Petty',desc:'The sarcastic original. Free.',usd:null},daisy:{name:'Daisy',desc:'Sweet Southern roasts. Bless your heart.',usd:'$2.99'},mick:{name:'Mick',desc:'Loud Aussie heckler. No excuses, mate.',usd:'$2.99'}};
 const BOSS_KEYS=['blob','clock','eye','hexa','wyrm','gemini','storm','omega'];
 let prof={coins:0,themes:['neon'],pets:['cat'],skins:['orb'],theme:'neon',pet:'cat',skin:'orb',voice:true};
 function sanitizeProf(j){
@@ -413,6 +414,7 @@ function sanitizeProf(j){
  if(j&&Array.isArray(j.pets))j.pets.forEach(k=>{if(PET_KEYS.includes(k)&&!o.pets.includes(k))o.pets.push(k)});
  if(j&&o.themes.includes(j.theme))o.theme=j.theme;
  if(j&&o.pets.includes(j.pet))o.pet=j.pet;
+ o.voices=['petty'];if(j&&Array.isArray(j.voices))j.voices.forEach(k=>{if(VOICES[k]&&!o.voices.includes(k))o.voices.push(k)});o.vc=j&&o.voices.includes(j.vc)?j.vc:'petty';
  return o;
 }
 try{prof=sanitizeProf(JSON.parse(lsGet('ia_prof')||'null'))}catch(e){}
@@ -474,7 +476,7 @@ function musicTick(){
  }
 }
 const CTL_NAMES={pad:'👆 Touchpad',joy:'🕹️ Joystick',finger:'✋ Finger'};
-function renderToggles(){const tj=$('#tJoy');if(tj)tj.textContent='Controls: '+CTL_NAMES[prof.ctl||'pad'];[['#tSound','sound','🔊 Sound','🔇 Sound'],['#tMusic','music','🎵 Music','🎵 Music'],['#tVib','vib','📳 Vibrate','📳 Vibrate'],['#tVoice','voice','🗣️ Petty','🗣️ Petty']].forEach(([id,k,on,off])=>{const b=$(id);b.textContent=(prof[k]?on:off)+(prof[k]?' On':' Off');b.classList.toggle('off',!prof[k])})}
+function renderToggles(){const tj=$('#tJoy');if(tj)tj.textContent='Controls: '+CTL_NAMES[prof.ctl||'pad'];[['#tSound','sound','🔊 Sound','🔇 Sound'],['#tMusic','music','🎵 Music','🎵 Music'],['#tVib','vib','📳 Vibrate','📳 Vibrate'],['#tVoice','voice','🗣️ Voice','🗣️ Voice']].forEach(([id,k,on,off])=>{const b=$(id);b.textContent=(prof[k]?on:off)+(prof[k]?' On':' Off');b.classList.toggle('off',!prof[k])})}
 [['#tSound','sound'],['#tMusic','music'],['#tVib','vib'],['#tVoice','voice']].forEach(([id,k])=>{$(id).onclick=()=>{prof[k]=!prof[k];saveProf();if((k==='sound'||k==='voice')&&!prof[k])try{Petty.stop()}catch(e){}renderToggles();if(k==='vib'&&prof.vib)buzz(40);if(k!=='vib')snd('click')}});
 
 /* ================= DAILY REWARD & MISSIONS ================= */
@@ -1007,7 +1009,7 @@ let dpOk=null;
 let payWait=null;const usedSids=new Set((()=>{try{return JSON.parse(lsGet('ia_sids')||'[]')}catch(e){return[]}})());
 function grantSid(sid){if(!sid||usedSids.has(sid))return false;usedSids.add(sid);lsSet('ia_sids',JSON.stringify([...usedSids].slice(-200)));return true}
 function setPayNote(t){$('#revNote').textContent=t;$('#shopNote').textContent=t}
-function grantItem(id){const m=/^(skin|theme)_(\w+)$/.exec(id||'');if(!m)return;const list=m[1]==='skin'?prof.skins:prof.themes;if(!list.includes(m[2]))list.push(m[2]);if(m[1]==='skin')prof.skin=m[2];else{prof.theme=m[2];applyTheme()}saveProf()}
+function grantItem(id){const m=/^(skin|theme|voice)_(\w+)$/.exec(id||'');if(!m)return;if(m[1]==='voice'){if(!VOICES[m[2]])return;if(!prof.voices.includes(m[2]))prof.voices.push(m[2]);prof.vc=m[2];saveProf();return}const list=m[1]==='skin'?prof.skins:prof.themes;if(!list.includes(m[2]))list.push(m[2]);if(m[1]==='skin')prof.skin=m[2];else{prof.theme=m[2];applyTheme()}saveProf()}
 async function realBuy(id,onOk){
  const w=window.open('','ia_pay','width=480,height=740');payWait={id,onOk};setPayNote('Opening secure checkout…');
  try{const r=await fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({item:id})}),j=await r.json();if(!r.ok||!j.url)throw new Error(j.error||'Checkout is unavailable right now.');
@@ -1621,10 +1623,23 @@ function renderUpgrades(grid){
  $('#shopNote').textContent=$('#shopNote').textContent||'Upgrades are permanent and work in every mode except the Daily Challenge.';
 }
 function usdBtn(price,name,onOk,id){const u=el('button','usd',price);u.onclick=()=>demoBuy(name,price,onOk,id);return u}
+function renderVoices(grid){
+ Object.keys(VOICES).forEach(k=>{
+  const it=VOICES[k],have=prof.voices.includes(k),eq=prof.vc===k,card=el('div','item'+(eq?' eq':''));
+  card.appendChild(el('h4','','🎙️ '+it.name));card.appendChild(el('p','',it.desc));
+  const bt=el('div','ibtns'),hear=el('button','','▶ Hear');hear.onclick=()=>Petty.preview(k);bt.appendChild(hear);
+  const b=el('button');
+  if(eq){b.textContent='Equipped';b.className='on'}
+  else if(have){b.textContent='Equip';b.onclick=()=>{prof.vc=k;saveProf();renderShop()}}
+  else{b.className='usd';b.textContent=it.usd;b.onclick=()=>demoBuy(it.name+' voice pack',it.usd,()=>{if(!prof.voices.includes(k))prof.voices.push(k);prof.vc=k;saveProf();$('#shopNote').textContent='✅ Unlocked '+it.name+'!';renderShop()},'voice_'+k)}
+  bt.appendChild(b);card.appendChild(bt);grid.appendChild(card);
+ });
+}
 function renderShop(){
  renderCoins();
  const grid=$('#shopGrid');grid.innerHTML='';
  if(shopTab==='up'){renderUpgrades(grid);return}
+ if(shopTab==='voices'){renderVoices(grid);return}
  const skins=shopTab==='skins',src=skins?SKINS:THEMES,owned=skins?prof.skins:prof.themes,cur=skins?prof.skin:prof.theme;
  Object.keys(src).forEach(k=>{
   const it=src[k],have=owned.includes(k),eq=cur===k;
@@ -1771,7 +1786,7 @@ async function submitWeekly(score,level){
   if(top.docs.some(d=>d.id===myId)&&!prof.skins.includes('crown')){prof.skins.push('crown');saveProf();$('#postMsg').textContent='👑 You\u2019re top 3 this week! You unlocked the Champion Crown skin!';$('#postMsg').className='good';snd('fanfare');buzz([50,50,50,50,200])}
  }catch(e){}
 }
-/* ================= PETTY (sarcastic commentator, ElevenLabs voice) ================= */
+/* ================= PETTY / DAISY / MICK (commentator, ElevenLabs voices) ================= */
 const Petty=(()=>{
  const V=1,SILENT='data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
  let L=null,cur=null,unlocked=false,welcomed=false,adLock=false;
@@ -1782,13 +1797,15 @@ const Petty=(()=>{
  const on=()=>!!(prof.sound&&prof.voice!==false);
  const box=document.createElement('div');box.id='petty';box.className='hidden';document.body.appendChild(box);
  const ready=fetch('/api/petty-voice?list=1&v='+V).then(r=>r.ok?r.json():null).then(j=>{if(j&&j.lines)L=j.lines}).catch(()=>{});
- function pick(p){
-  const a=L&&L[p];if(!a||!a.length)return null;
-  const rec=st.recent[p]||[],k=Math.min(3,a.length-1),bad=k>0?rec.slice(-k):[];
+ function pick(p,who){
+  const c=L&&L[who||prof.vc]?(who||prof.vc):'petty',set=L&&L[c];if(!set)return null;
+  if(!set[p]&&p.indexOf('welcome_')===0)p='welcome_back';
+  const a=set[p];if(!a||!a.length)return null;
+  const rk=c+':'+p,rec=st.recent[rk]||[],k=Math.min(3,a.length-1),bad=k>0?rec.slice(-k):[];
   const opts=a.map((_,i)=>i).filter(i=>!bad.includes(i)),i=opts[Math.floor(Math.random()*opts.length)];
-  st.recent[p]=[...rec,i].slice(-3);save();return{p,i,text:a[i]};
+  st.recent[rk]=[...rec,i].slice(-3);save();return{c,p,i,text:a[i]};
  }
- function load(l){const key=l.p+'/'+l.i;if(!clips.has(key))clips.set(key,fetch('/api/petty-voice?p='+encodeURIComponent(l.p)+'&i='+l.i+'&v='+V).then(r=>{if(!r.ok)throw 0;return r.blob()}).then(b=>URL.createObjectURL(b)).catch(e=>{clips.delete(key);throw e}));return clips.get(key)}
+ function load(l){const key=l.c+'/'+l.p+'/'+l.i;if(!clips.has(key))clips.set(key,fetch('/api/petty-voice?c='+l.c+'&p='+encodeURIComponent(l.p)+'&i='+l.i+'&v='+V).then(r=>{if(!r.ok)throw 0;return r.blob()}).then(b=>URL.createObjectURL(b)).catch(e=>{clips.delete(key);throw e}));return clips.get(key)}
  function end(t){if(!t||cur!==t)return;cur=null;box.classList.add('hidden');const f=t.done;t.done=null;if(f)f()}
  function stop(){const t=cur;if(!t)return;cur=null;try{au.pause()}catch(e){}box.classList.add('hidden');const f=t.done;t.done=null;if(f)f()}
  /* prio: 3 ads, 2 interruption complaint, 1 ordinary. One picked line drives both voice and caption. */
@@ -1799,7 +1816,7 @@ const Petty=(()=>{
   const fail=()=>end(t),guard=setTimeout(()=>{if(cur===t&&!t.playing)fail()},prio===3?4000:7000);
   load(l).then(u=>{if(cur!==t)return;if(!on()){fail();return}
    au.onended=()=>{clearTimeout(guard);end(t)};au.src=u;
-   au.play().then(()=>{if(cur!==t){try{au.pause()}catch(e){}return}t.playing=true;box.textContent=l.text;box.classList.remove('hidden')}).catch(fail);
+   au.play().then(()=>{if(cur!==t){try{au.pause()}catch(e){}return}t.playing=true;box.dataset.who=(VOICES[l.c]||VOICES.petty).name;box.textContent=l.text;box.classList.remove('hidden')}).catch(fail);
   }).catch(fail);
  }
  function welcome(){
@@ -1855,7 +1872,8 @@ const Petty=(()=>{
  /* video revive: pre-ad line finishes before the ad appears; nothing talks over the ad */
  function adBefore(go){adLock=false;say(pick('ad_before'),3,'ad',()=>{adLock=true;go()})}
  function adAfter(){adLock=false;say(pick('ad_after'),3,'ad')}
- return{result,leave,adBefore,adAfter,stop,adOff:()=>{adLock=false}};
+ function preview(c){unlock();ready.then(()=>say(pick(lsGet('ia_tut')?'welcome_back':'welcome_new',c),1,'preview'))}
+ return{result,leave,adBefore,adAfter,stop,preview,adOff:()=>{adLock=false}};
 })();
 applyTheme();renderCoins();renderToggles();renderDaily();renderPCard();resize();requestAnimationFrame(loop);initDb();
 })();
