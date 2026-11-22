@@ -28,7 +28,7 @@ button{font:inherit;cursor:pointer}
 #info{height:80px;flex:none;padding:6px 12px;border-bottom:1px solid var(--line);background:#0a0d1b;display:flex;flex-direction:column;justify-content:center;gap:4px}
 #twistB{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%) scale(.6);z-index:9000;pointer-events:none;opacity:0;text-align:center;padding:16px 22px;border-radius:18px;background:rgba(10,12,28,.92);border:2px solid var(--pu);box-shadow:0 0 30px rgba(0,0,0,.6);max-width:86vw;transition:opacity .25s,transform .25s}#twistB.on{opacity:1;transform:translate(-50%,-50%) scale(1)}#twistB b{display:block;font-size:26px;letter-spacing:1px;color:var(--pu)}#twistB small{display:block;font-size:15px;margin-top:6px;color:#fff;opacity:.9}
 #menu.fresh .pcard,#menu.fresh #claimBtn,#menu.fresh #dCard,#menu.fresh label,#menu.fresh .modes,#menu.fresh #modeDesc,#menu.fresh .row2,#menu.fresh #menuCoins,#menu.fresh #menuRank,#menu.fresh #daily,#menu.fresh #name{display:none!important}
-#menu.fresh .freshTip{display:block}.freshTip{display:none;margin:4px 0 14px;font-size:15px;color:var(--muted)}
+#menu.fresh .freshTip{display:block}#menu:not(.fresh) .tag{display:none}#menu .pcard{margin-top:14px}#menu #claimBtn{margin-top:12px}.freshTip{display:none;margin:4px 0 14px;font-size:15px;color:var(--muted)}
 #msg.menuLine{display:flex;align-items:center;max-height:none;overflow:visible;-webkit-line-clamp:unset;padding:2px 0}
 #msg.menuLine .stk{display:inline-flex;align-items:center;gap:8px;padding:3px 14px 3px 6px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid rgba(255,120,60,.35)}
 #msg.menuLine .stk i{font-style:normal;font-size:18px;width:26px;height:26px;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle,rgba(255,140,40,.35),transparent 70%)}
@@ -229,15 +229,15 @@ input:focus{border-color:var(--cyan)}
      <div class="pre">99% IMPOSSIBLE</div>
      <h1>INFINITE<br>ARENA</h1>
      <p class="tag" style="margin-bottom:12px">The levels never end. They just get harder.</p>
-     <div class="pcard" id="pcard"></div>
      <button class="vs hidden" id="vsBtn"></button>
-     <button class="claim hidden" id="claimBtn"></button>
-     <button class="dcard" id="dCard"></button>
      <label>Game mode</label><div class="modes" id="modes"></div><div id="modeDesc"></div>
      <p class="freshTip">👆 Tap PLAY. A 30-second tutorial shows you everything.</p>
      <button class="big" id="play">PLAY</button>
+     <button class="dcard" id="dCard"></button>
+     <button class="claim hidden" id="claimBtn"></button>
      <div class="row2"><button class="sec" id="menuTut">🎓 Tutorial</button><button class="sec" id="menuShop">🛒 Shop</button><button class="sec" id="menuLb">🏆 Board</button></div>
      <div style="height:16px"></div>
+     <div class="pcard" id="pcard"></div>
      <div class="coins" id="menuCoins">🌙 0 Moon Coins</div>
      <div class="credit" id="menuRank" style="margin:-6px 0 14px"></div>
      <div class="daily" id="daily"></div>
