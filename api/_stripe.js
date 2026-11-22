@@ -18,6 +18,8 @@ export const ITEMS = {
   theme_candy: { name: 'Candy Crush color pack', cents: 99 },
   theme_retro: { name: 'Retro Terminal color pack', cents: 99 },
   theme_gold: { name: '24K Gold color pack', cents: 99 },
+  voice_daisy: { name: 'Daisy voice pack', cents: 299 },
+  voice_mick: { name: 'Mick voice pack', cents: 299 },
 };
 
 function form(obj, prefix, out = []) {
