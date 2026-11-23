@@ -1107,13 +1107,21 @@ $('#dpPay').onclick=()=>{const f=dpOk;if(!f)return;dpOk=null;$('#dpPay').disable
 function showRevive(){
  $('#adBox').classList.add('hidden');$('#revOpts').classList.remove('hidden');$('#noRow').classList.remove('hidden');$('#revNote').textContent='';
  const used=!!G.adUsed;$('#watchAd').classList.toggle('hidden',used);
- $('#watchAd').textContent=NATIVE?'❤️ FREE REVIVE · ONCE PER RUN':'▶ WATCH A VIDEO · REVIVE WITH 1 ❤️';
- $('#revTag').textContent=used?'You used your free revive this run. Buy hearts to keep going.':NATIVE?'Take 1 free heart (once per run) or buy hearts. You keep your score.':'Watch a short ad for 1 free heart, or buy hearts. You keep your score.';
+ $('#watchAd').textContent='▶ WATCH A VIDEO · REVIVE WITH 1 ❤️';
+ $('#revTag').textContent=used?'You used your free revive this run. Buy hearts to keep going.':'Watch a short ad for 1 free heart, or buy hearts. You keep your score.';
  $('#revive').classList.remove('hidden');
 }
 document.querySelectorAll('#revOpts .usdb').forEach(b=>b.onclick=()=>{const n=+b.dataset.h,price=b.textContent.replace(/^.*\$/,'$');demoBuy(n+' heart'+(n>1?'s':'')+' · revive now',price,()=>{revive(n,true)},'hearts'+n)});
+/* iOS rewarded ads (AdMob) */
+const AD_CFG={reward:'ca-app-pub-3321938987480073/5396228998'};let adReady=false;
+const AM=()=>NATIVE&&NP.AdMob;
+async function adPrep(){const A=AM();if(!A||adReady)return;try{await A.prepareRewardVideoAd({adId:AD_CFG.reward});adReady=true}catch(e){}}
+if(NATIVE)setTimeout(async()=>{const A=AM();if(!A)return;try{await A.initialize();try{const c=await A.requestConsentInfo();if(c&&c.isConsentFormAvailable&&c.status==='REQUIRED')await A.showConsentForm()}catch(e){}try{const t=await A.trackingAuthorizationStatus();if(t&&t.status==='notDetermined')await A.requestTrackingAuthorization()}catch(e){}adPrep()}catch(e){}},2500);
+async function nativeAdRevive(){const A=AM();let got=false;
+ try{if(!A)throw 0;if(!adReady)await A.prepareRewardVideoAd({adId:AD_CFG.reward});adReady=false;const r=await A.showRewardVideoAd();got=!!r}catch(e){got=true}
+ if(got&&G&&G.phase==='over')revive();setTimeout(adPrep,1500)}
 $('#watchAd').onclick=()=>{
- if(NATIVE){G.adUsed=true;revive();return}
+ if(NATIVE){G.adUsed=true;nativeAdRevive();return}
  G.adUsed=true;$('#revOpts').classList.add('hidden');$('#noRow').classList.add('hidden');
  Petty.adBefore(()=>{if(!G||G.phase!=='over'||$('#revive').classList.contains('hidden'))return;
  $('#adBox').classList.remove('hidden');
