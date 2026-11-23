@@ -1690,6 +1690,7 @@ function renderChase(){
  let target=null,rank=1;
  for(let i=others.length-1;i>=0;i--){if(others[i].score>cur){target=others[i];rank=i+1;break}}
  e.classList.remove('hidden');e.innerHTML='';
+ if(G.pb&&cur<=G.pb&&(!target||G.pb<target.score)){e.append('Beat your best in ');e.append(el('b','',G.mode==='survival'?fmtTime(G.pb-cur+1):(G.pb-cur+1).toLocaleString()));if(G.mode!=='survival')e.append(' pts');return}
  if(!target){e.textContent='👑 #1 on the board!';return}
  e.append('Pass #'+rank+' '+target.name+' in ');
  if(G.mode==='survival'){e.append(el('b','',fmtTime(target.score-cur+1)))}else{e.append(el('b','',(target.score-cur+1).toLocaleString()),' pts')}
