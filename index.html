@@ -727,6 +727,7 @@ function startGame(mode){
  if(upLvl('shield'))G.shield=true;if(upLvl('heart'))G.lives=4;
  hideOverlays();$('#skipTut').classList.add('hidden');
  setLbMode(mode);
+ {const b=bestValid(mode,bests[mode]);G.pb=b&&b.score>0?b.score:0;G.pbHit=false}
  nextLevel();
  if(G.twist){const t=todayTwist(),b=$('#twistB');b.innerHTML='';b.append('📅 TODAY\u2019S TWIST');b.appendChild(el('b','',t.ic+' '+t.name.toUpperCase()));b.appendChild(el('small','',t.desc));b.classList.add('on');clearTimeout(b._t);b._t=setTimeout(()=>b.classList.remove('on'),3200);setMsg(t.ic+' Daily twist: '+t.name+'. '+t.desc,'good',4)}
 }
@@ -1137,6 +1138,7 @@ function revive(n,paid){
 }
 function showClose(mode,metric,prevBest){
  const box=$('#closeMsg'),out=[];
+ if(prevBest&&prevBest.score>0&&metric>prevBest.score)out.push('🏆 New personal best! +'+(mode==='survival'?fmtTime(metric-prevBest.score):(metric-prevBest.score).toLocaleString())+' over your old one.');
  if(prevBest&&metric<prevBest.score){const gap=prevBest.score-metric,pct=gap/Math.max(1,prevBest.score);
   if(pct<=.35)out.push('🔥 Only '+(mode==='survival'?fmtTime(gap):gap.toLocaleString()+(mode==='boss'?' boss'+(gap>1?'es':''):' points'))+' from your best!')}
  const li=lvlInfo(prof.xp),left=li.need-li.into;if(left/li.need<=.3)out.push('⭐ '+left.toLocaleString()+' XP to Lv '+(li.l+1)+'. One more run!');
@@ -1653,7 +1655,14 @@ function hud(){
  $('#lvl b').textContent=G.tutorial?'🎓':G.mode==='survival'?fmtTime(G.survT):G.mode==='boss'?G.level/10:G.level;$('#sc b').textContent=G.score.toLocaleString();$('#cb b').textContent='x'+Math.max(1,G.combo);
  $('#lives').textContent='♥'.repeat(Math.max(0,G.lives))+'♡'.repeat(Math.max(0,3-G.lives));
  $('#prog i').style.width=(G.mode==='survival'&&!G.tutorial?(1-G.waveT/WAVE)*100:G.tutorial?(G.tut?G.tut.i/TUT.length*100:0):G.boss?(1-G.boss.hp/G.boss.max)*100:C&&C.boss?100:C?Math.min(100,G.got/C.orbs*100):0)+'%';
- renderChase();
+ renderChase();pbCheck();
+}
+function pbCheck(){
+ if(!G||G.tutorial||G.pbHit||!G.pb||G.phase==='over')return;
+ if(metricOf()<=G.pb)return;
+ G.pbHit=true;snd('fanfare');buzz([30,30,30,30,90]);G.flash=Math.max(G.flash||0,.3);
+ burst(P.x,P.y,T.orb,LOWFX?30:50,320);pop(P.x,P.y-46,'NEW BEST!',T.orb);
+ setMsg('🏆 NEW PERSONAL BEST! Keep going!','good',3);
 }
 function renderInfo(){
  let text,cls;
@@ -1673,7 +1682,10 @@ function renderChase(){
  if(G&&!G.tutorial&&CH&&G.mode===CH.m){const cur=metricOf();e.classList.remove('hidden');e.innerHTML='';
   if(cur>CH.s){e.append('✅ Beat ',el('b','',CH.n),'!');return}
   e.append('Beat '+CH.n+' in ');e.append(el('b','',G.mode==='survival'?fmtTime(CH.s-cur+1):(CH.s-cur+1).toLocaleString()));if(G.mode!=='survival')e.append(' pts');return}
- if(!G||G.tutorial||!rows.length||G.mode!==lbMode){e.classList.add('hidden');return}
+ if(!G||G.tutorial){e.classList.add('hidden');return}
+ if(!rows.length||G.mode!==lbMode){const cur=metricOf();if(!G.pb){e.classList.add('hidden');return}e.classList.remove('hidden');e.innerHTML='';
+  if(cur>G.pb){e.append('🏆 ',el('b','','NEW BEST'),'!');return}
+  e.append('Beat your best in ');e.append(el('b','',G.mode==='survival'?fmtTime(G.pb-cur+1):(G.pb-cur+1).toLocaleString()));if(G.mode!=='survival')e.append(' pts');return}
  const others=rows.filter(r=>r.id!==myId),cur=metricOf();
  let target=null,rank=1;
  for(let i=others.length-1;i>=0;i--){if(others[i].score>cur){target=others[i];rank=i+1;break}}
