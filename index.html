@@ -1077,7 +1077,7 @@ let dpOk=null;
 let payWait=null;const usedSids=new Set((()=>{try{return JSON.parse(lsGet('ia_sids')||'[]')}catch(e){return[]}})());
 function grantSid(sid){if(!sid||usedSids.has(sid))return false;usedSids.add(sid);lsSet('ia_sids',JSON.stringify([...usedSids].slice(-200)));return true}
 function setPayNote(t){$('#revNote').textContent=t;$('#shopNote').textContent=t}
-function grantItem(id){const m=/^(skin|theme|voice)_(\w+)$/.exec(id||'');if(!m)return;if(m[1]==='voice'){if(!VOICES[m[2]])return;if(!prof.voices.includes(m[2]))prof.voices.push(m[2]);prof.vc=m[2];saveProf();return}const list=m[1]==='skin'?prof.skins:prof.themes;if(!list.includes(m[2]))list.push(m[2]);if(m[1]==='skin')prof.skin=m[2];else{prof.theme=m[2];applyTheme()}saveProf()}
+function grantItem(id){if(id==='up_all'){for(const k in UPGRADES)prof.up[k]=UPGRADES[k].costs.length;saveProf();return}const um=/^up_(\w+)_(\d)$/.exec(id||'');if(um){const u=UPGRADES[um[1]];if(!u)return;prof.up[um[1]]=Math.min(u.costs.length,Math.max(prof.up[um[1]]||0,+um[2]));saveProf();return}const m=/^(skin|theme|voice)_(\w+)$/.exec(id||'');if(!m)return;if(m[1]==='voice'){if(!VOICES[m[2]])return;if(!prof.voices.includes(m[2]))prof.voices.push(m[2]);prof.vc=m[2];saveProf();return}const list=m[1]==='skin'?prof.skins:prof.themes;if(!list.includes(m[2]))list.push(m[2]);if(m[1]==='skin')prof.skin=m[2];else{prof.theme=m[2];applyTheme()}saveProf()}
 async function realBuy(id,onOk){
  const w=window.open('','ia_pay','width=480,height=740');payWait={id,onOk};setPayNote('Opening secure checkout…');
  try{const r=await fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({item:id})}),j=await r.json();if(!r.ok||!j.url)throw new Error(j.error||'Checkout is unavailable right now.');
@@ -1772,8 +1772,9 @@ function renderUpgrades(grid){
   const bt=el('div','ibtns'),b=el('button');
   if(lv>=max){b.textContent='MAXED';b.className='on'}
   else{const c=u.costs[lv];b.className='buy';b.textContent='🌙 '+c.toLocaleString();b.disabled=prof.coins<c;b.onclick=()=>{if(prof.coins<c)return;prof.coins-=c;prof.up[k]=lv+1;saveProf();snd('level');buzz([20,30,20]);$('#shopNote').textContent='⬆️ '+u.name+' is now level '+(lv+1)+'!';renderShop()}}
-  bt.appendChild(b);card.appendChild(bt);grid.appendChild(card);
+  bt.appendChild(b);if(lv<max&&!NATIVE){const id='up_'+k+'_'+(lv+1);bt.appendChild(usdBtn(['$0.99','$1.99','$2.99'][lv],u.name+' · level '+(lv+1),()=>{grantItem(id);$('#shopNote').textContent='⬆️ '+u.name+' is now level '+(lv+1)+'!';renderShop()},id))}card.appendChild(bt);grid.appendChild(card);
  });
+ if(!NATIVE&&Object.keys(UPGRADES).some(k=>(prof.up[k]||0)<UPGRADES[k].costs.length)){const c=el('div','item');c.appendChild(el('div','upic','⚡'));c.appendChild(el('h4','','Max Everything'));c.appendChild(el('p','','Every upgrade at max level, instantly. Best value.'));const bt=el('div','ibtns');bt.appendChild(usdBtn('$9.99','Max All Upgrades bundle',()=>{grantItem('up_all');$('#shopNote').textContent='⚡ All upgrades maxed!';renderShop()},'up_all'));c.appendChild(bt);grid.insertBefore(c,grid.firstChild)}
  $('#shopNote').textContent=$('#shopNote').textContent||'Upgrades are permanent and work in every mode except the Daily Challenge.';
 }
 function usdBtn(price,name,onOk,id){const u=el('button','usd',price);u.onclick=()=>demoBuy(name,price,onOk,id);return u}
