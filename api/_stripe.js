@@ -20,7 +20,11 @@ export const ITEMS = {
   theme_gold: { name: '24K Gold color pack', cents: 99 },
   voice_daisy: { name: 'Daisy voice pack', cents: 299 },
   voice_mick: { name: 'Mick voice pack', cents: 299 },
+  up_all: { name: 'Max All Upgrades bundle', cents: 999 },
 };
+// Upgrade levels: level 1 $0.99, level 2 $1.99, level 3 $2.99.
+const UPS = { shield: ['Starting Shield', 1], heart: ['Extra Heart', 1], dur: ['Longer Power-Ups', 3], mag: ['Stronger Magnet', 3], combo: ['Combo Keeper', 2], luck: ['Lucky Drops', 3], coin: ['Coin Boost', 3] };
+for (const [k, [n, max]] of Object.entries(UPS)) for (let l = 1; l <= max; l++) ITEMS[`up_${k}_${l}`] = { name: `${n} upgrade (level ${l})`, cents: [99, 199, 299][l - 1] };
 
 function form(obj, prefix, out = []) {
   for (const [k, v] of Object.entries(obj)) {
