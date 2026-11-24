@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "build = build and upload a new build; submit = send the latest uploaded build to App Review"
+        description: "build = build and upload a new build; submit = send the latest uploaded build to App Review; status = print the App Store review status (read-only)"
         type: choice
-        options: [build, submit]
+        options: [build, submit, status]
         default: build
 
 concurrency:
@@ -27,7 +27,7 @@ jobs:
           node-version: 22
 
       - name: Build web bundle and sync Capacitor
-        if: inputs.mode != 'submit'
+        if: inputs.mode == 'build'
         working-directory: mobile
         run: |
           npm ci
@@ -63,7 +63,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/signing" .ci-cert
 
       - name: Create temporary keychain
-        if: inputs.mode != 'submit'
+        if: inputs.mode == 'build'
         run: |
           KEYCHAIN="$RUNNER_TEMP/app-signing.keychain-db"
           security create-keychain -p actions "$KEYCHAIN"
@@ -102,6 +102,18 @@ jobs:
             lane :upload_build do
               upload_to_app_store(api_key: api_token, ipa: ENV.fetch("IPA_PATH"), skip_metadata: true, skip_screenshots: true, run_precheck_before_submit: false)
             end
+            # Read-only: print each App Store version's review state and attached build.
+            lane :status do
+              api_token
+              app = Spaceship::ConnectAPI::App.find(ENV.fetch("BUNDLE_ID")) or UI.user_error!("App not found")
+              app.get_app_store_versions.each do |v|
+                b = v.build rescue nil
+                UI.important("VERSION #{v.version_string}: state=#{v.app_store_state} release=#{v.release_type} build=#{b ? b.version + ' (' + b.processing_state.to_s + ')' : 'none'}")
+              end
+              Spaceship::ConnectAPI::Build.all(app_id: app.id, sort: "-uploadedDate", limit: 5).each do |b|
+                UI.important("BUILD #{b.version}: processing=#{b.processing_state} expired=#{b.expired}")
+              end
+            end
             # Attach the newest processed 1.0 build to the version and send it to App Review.
             lane :submit_review do
               upload_to_app_store(api_key: api_token, app_identifier: ENV.fetch("BUNDLE_ID"), platform: "ios", app_version: "1.0", skip_binary_upload: true, skip_metadata: true, skip_screenshots: true, run_precheck_before_submit: false, force: true, submit_for_review: true, automatic_release: true, reject_if_possible: false, submission_information: { add_id_info_uses_idfa: false, export_compliance_uses_encryption: false })
@@ -110,7 +122,7 @@ jobs:
           RUBY
 
       - name: Create signing assets
-        if: inputs.mode != 'submit'
+        if: inputs.mode == 'build'
         run: |
           fastlane ios create_signing
           security set-key-partition-list -S apple-tool:,apple: -s -k actions "$KEYCHAIN_PATH"
@@ -122,14 +134,14 @@ jobs:
           echo "PROFILE_NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' "$RUNNER_TEMP/profile.plist")" >> "$GITHUB_ENV"
 
       - name: Save this run's certificate id for the next run
-        if: always() && inputs.mode != 'submit'
+        if: always() && inputs.mode == 'build'
         uses: actions/cache/save@v4
         with:
           path: .ci-cert
           key: ia-dist-cert-${{ github.run_id }}
 
       - name: Version, build number, signing
-        if: inputs.mode != 'submit'
+        if: inputs.mode == 'build'
         run: |
           P=mobile/ios/App/App/Info.plist
           /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 1.0" $P || /usr/libexec/PlistBuddy -c "Add :CFBundleShortVersionString string 1.0" $P
@@ -150,13 +162,13 @@ jobs:
             p.save'
 
       - name: Archive
-        if: inputs.mode != 'submit'
+        if: inputs.mode == 'build'
         run: |
           xcodebuild -project mobile/ios/App/App.xcodeproj -scheme App -configuration Release \
             -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/IA.xcarchive" archive
 
       - name: Export IPA
-        if: inputs.mode != 'submit'
+        if: inputs.mode == 'build'
         run: |
           cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
           <?xml version="1.0" encoding="UTF-8"?>
@@ -171,7 +183,7 @@ jobs:
           xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/IA.xcarchive" -exportPath "$RUNNER_TEMP/export" -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist"
 
       - name: Verify signature
-        if: inputs.mode != 'submit'
+        if: inputs.mode == 'build'
         run: |
           IPA=$(find "$RUNNER_TEMP/export" -name '*.ipa' -print -quit); test -n "$IPA"
           mkdir -p "$RUNNER_TEMP/v" && unzip -q "$IPA" -d "$RUNNER_TEMP/v"
@@ -182,13 +194,13 @@ jobs:
           RELEASE_APP_PATH="$APP" RELEASE_PROFILE_PATH="$RUNNER_TEMP/ep.plist" RELEASE_CERTIFICATE_PATH="$RUNNER_TEMP/rc-0" python3 scripts/verify-ios-export.py
 
       - uses: actions/upload-artifact@v4
-        if: inputs.mode != 'submit'
+        if: inputs.mode == 'build'
         with:
           name: infinite-arena-ipa
           path: ${{ runner.temp }}/export/*.ipa
 
       - name: Upload to App Store Connect
-        if: inputs.mode != 'submit'
+        if: inputs.mode == 'build'
         run: |
           IPA=$(find "$RUNNER_TEMP/export" -name '*.ipa' -print -quit)
           IPA_PATH="$IPA" fastlane ios upload_build
@@ -196,3 +208,7 @@ jobs:
       - name: Submit for App Review
         if: inputs.mode == 'submit'
         run: fastlane ios submit_review
+
+      - name: App Store status
+        if: inputs.mode == 'status'
+        run: fastlane ios status
