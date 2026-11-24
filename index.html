@@ -4,6 +4,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>99 Percent Impossible: Infinite Arena</title>
+<meta name="description" content="Dodge everything, grab the orbs, beat the bosses. A free arcade game that plays in your browser. 99% of players fold. Are you the 1%?">
+<meta name="theme-color" content="#12082e">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="99% Impossible: Infinite Arena">
+<meta property="og:title" content="99% Impossible: Infinite Arena">
+<meta property="og:description" content="Dodge everything. Beat the bosses. Free, no download. 99% of players fold.">
+<meta property="og:url" content="https://infinite-arena-ten.vercel.app/">
+<meta property="og:image" content="https://infinite-arena-ten.vercel.app/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://infinite-arena-ten.vercel.app/og.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -1727,7 +1741,7 @@ const GAME_URL=NATIVE?'https://infinite-arena-ten.vercel.app':!window.claude&&/^
 $('#shareBtn').onclick=()=>{
  if(!G)return;const m=G.mode,v=metricOf();
  const what=m==='survival'?'lasted '+fmtTime(v)+' in Survival':m==='boss'?'beat '+G.bossKills+' boss'+(G.bossKills===1?'':'es')+' in Boss Rush':m==='daily'?'scored '+v.toLocaleString()+' on today\u2019s Daily Challenge':'scored '+v.toLocaleString()+' (level '+G.level+')';
- let url=GAME_URL;if(!window.claude&&v>0)url=GAME_URL+'/?vs='+encodeURIComponent(playerName())+'&m='+m+'&s='+v+'&utm_source=challenge';
+ let url=GAME_URL;if(!window.claude&&v>0)url=GAME_URL+(NATIVE||location.hostname.endsWith('.vercel.app')?'/c':'/')+'?vs='+encodeURIComponent(playerName())+'&m='+m+'&s='+v+'&utm_source=challenge';
  const txt='I just '+what+' in 99% Impossible: Infinite Arena 🎮 Think you can beat me? '+url;
  const ta=$('#shareTxt');ta.value=txt;
  const done=()=>{$('#shareBtn').textContent='✅ Copied! Paste it in a text to a friend'};
@@ -1757,7 +1771,7 @@ function makeCard(){
 $('#cardBtn').onclick=()=>{
  if(!G)return;let c;try{c=makeCard()}catch(e){return}
  c.toBlob(b=>{if(!b)return;const f=new File([b],'infinite-arena-score.png',{type:'image/png'});
-  const url=GAME_URL+(!window.claude&&metricOf()>0?'/?vs='+encodeURIComponent(playerName())+'&m='+G.mode+'&s='+metricOf()+'&utm_source=card':'');
+  const url=GAME_URL+(!window.claude&&metricOf()>0?(NATIVE||location.hostname.endsWith('.vercel.app')?'/c':'/')+'?vs='+encodeURIComponent(playerName())+'&m='+G.mode+'&s='+metricOf()+'&utm_source=card':'');
   if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],text:'Beat me in 99% Impossible: Infinite Arena '+url}).then(()=>{$('#cardBtn').textContent='✅ Shared!'},()=>{});return}
   const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=f.name;document.body.appendChild(a);a.click();a.remove();$('#cardBtn').textContent='✅ Saved!';setTimeout(()=>URL.revokeObjectURL(a.href),4000)},'image/png')};
 $('#again').onclick=()=>{startGame(G&&G.mode?G.mode:selMode)};
