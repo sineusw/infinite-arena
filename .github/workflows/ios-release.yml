@@ -104,7 +104,7 @@ jobs:
             end
             # Attach the newest processed 1.0 build to the version and send it to App Review.
             lane :submit_review do
-              upload_to_app_store(api_key: api_token, app_version: "1.0", skip_binary_upload: true, skip_metadata: true, skip_screenshots: true, run_precheck_before_submit: false, force: true, submit_for_review: true, automatic_release: true, reject_if_possible: false, submission_information: { add_id_info_uses_idfa: false, export_compliance_uses_encryption: false })
+              upload_to_app_store(api_key: api_token, app_identifier: ENV.fetch("BUNDLE_ID"), platform: "ios", app_version: "1.0", skip_binary_upload: true, skip_metadata: true, skip_screenshots: true, run_precheck_before_submit: false, force: true, submit_for_review: true, automatic_release: true, reject_if_possible: false, submission_information: { add_id_info_uses_idfa: false, export_compliance_uses_encryption: false })
             end
           end
           RUBY
