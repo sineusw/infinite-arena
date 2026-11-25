@@ -8,6 +8,11 @@
 <meta name="theme-color" content="#12082e">
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Infinite Arena">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="99% Impossible: Infinite Arena">
 <meta property="og:title" content="99% Impossible: Infinite Arena">
@@ -146,6 +151,7 @@ input:focus{border-color:var(--cyan)}
 .res div{flex:1;background:#0b0e1c;border:1px solid var(--line);border-radius:12px;padding:12px}
 .res small{display:block;font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
 .res b{font-family:Orbitron;font-size:22px}
+#instRow{margin-top:10px}#instBtn{border-color:#3dff9a66;color:#3dff9a}#instHelp ol{text-align:left;margin:10px 0 6px 22px;line-height:1.7}#instHelp b{color:var(--yellow)}
 #closeMsg{font-size:16px;font-weight:800;color:var(--gold,#ffd34d);margin:4px 0 8px;animation:cmPulse 1.2s ease-in-out infinite}@keyframes cmPulse{50%{transform:scale(1.06)}}
 #postMsg{min-height:22px;font-size:14px;color:var(--muted);margin-bottom:6px}
 #postMsg.good{color:var(--green)}
@@ -333,7 +339,17 @@ body.onmenu #hud,body.onmenu #info{display:none!important}
      <button class="big" id="again">PLAY AGAIN</button>
      <div class="row2"><button class="sec" id="shareBtn">📣 Challenge a friend</button><button class="sec" id="cardBtn">🖼️ Score card</button></div>
      <textarea id="shareTxt" class="hidden" readonly></textarea>
+     <div class="row2 hidden" id="instRow"><button class="sec" id="instBtn">📲 Add to Home Screen · +100 🌙</button><button class="sec" id="instNo" style="flex:0 0 44px" aria-label="Not now">✕</button></div>
      <div class="row2"><button class="sec" id="overMenu">Menu</button><button class="sec" id="overShop">🛒 Shop</button><button class="sec" id="overLb">🏆 Board</button></div>
+    </div>
+   </div>
+   <div class="ov hidden" id="instHelp" style="z-index:9">
+    <div class="card">
+     <h2>📲 PLAY IN 1 TAP</h2>
+     <p class="tag">Put Infinite Arena on your home screen. It opens full screen, no browser bars, and your first launch from the icon pays <b>+100 🌙</b>.</p>
+     <ol><li>Tap the <b>Share</b> button <b>⬆️</b> in Safari's toolbar</li><li>Scroll and tap <b>Add to Home Screen</b></li><li>Tap <b>Add</b>, then open the new icon</li></ol>
+     <p class="credit" id="instNote">On iPhone the home-screen version keeps its own save, separate from Safari.</p>
+     <button class="big" id="instOk">GOT IT</button>
     </div>
    </div>
    <div class="ov hidden" id="revive">
@@ -1177,7 +1193,7 @@ function finishGame(){
   $('#coinMsg').textContent=(earned+dailyBonus)?'+'+(earned+dailyBonus)+' 🌙 Moon Coins'+(dailyBonus?' (incl. +50 daily bonus)':'')+'  ·  You have '+prof.coins.toLocaleString():'';
   $('#xpMsg').textContent='+'+xpGain+' XP'+(after>before?'  ·  🎉 LEVEL UP! Lv '+after+' '+titleFor(after)+' · +'+lvlCoins+' 🌙':'');if(after>before){snd('fanfare');buzz([40,40,40,40,120])}
   $('#shareBtn').textContent=CH&&mode===CH.m?'⚔️ Send a challenge back to '+CH.n:'📣 Challenge a friend';$('#shareTxt').classList.add('hidden');$('#cardBtn').textContent='🖼️ Score card';renderPCard();
-  $('#over').classList.remove('hidden');renderOverRank();
+  $('#over').classList.remove('hidden');renderOverRank();try{Inst.onOver()}catch(e){}
   const prevBest=bests[mode]?Object.assign({},bests[mode]):null;
   submitScore(mode,metric,G.level,G.bossKills);
   try{Petty.result(mode,metric,prevBest)}catch(e){}
@@ -2081,6 +2097,33 @@ const Petty=(()=>{
  function adAfter(){adLock=false;say(pick('ad_after'),3,'ad')}
  function preview(c){unlock();ready.then(()=>say(pick(lsGet('ia_tut')?'welcome_back':'welcome_new',c),1,'preview'))}
  return{result,leave,adBefore,adAfter,stop,preview,adOff:()=>{adLock=false}};
+})();
+/* ================= ADD TO HOME SCREEN (PWA) ================= */
+const Inst=(()=>{
+ const standalone=()=>{try{return matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches||navigator.standalone===true}catch(e){return false}};
+ const ua=navigator.userAgent||'',iOS=/iPad|iPhone|iPod/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+ let deferred=null;
+ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e});
+ window.addEventListener('appinstalled',()=>{deferred=null;lsSet('ia_inst','1');$('#instRow').classList.add('hidden')});
+ const paid=()=>usedSids.size>0||(prof.voices||[]).length>1;
+ function canOffer(){
+  if(NATIVE||standalone()||lsGet('ia_inst'))return false;
+  const g=+(lsGet('ia_g')||0),no=+(lsGet('ia_instNo')||0);
+  if(g<2||no>=3)return false;
+  if(no&&g<+(lsGet('ia_instNoAt')||0)+5)return false; /* after "not now", wait 5 more runs */
+  if(deferred)return true;
+  return iOS&&!paid(); /* iPhone home-screen apps get separate storage: only offer to players with nothing bought */
+ }
+ function onOver(){$('#instRow').classList.toggle('hidden',!canOffer())}
+ $('#instBtn').onclick=async()=>{
+  if(deferred){const d=deferred;deferred=null;try{d.prompt();const r=await d.userChoice;if(r&&r.outcome==='accepted'){lsSet('ia_inst','1');$('#instRow').classList.add('hidden')}}catch(e){}return}
+  $('#instHelp').classList.remove('hidden');
+ };
+ $('#instNo').onclick=()=>{lsSet('ia_instNo',String(+(lsGet('ia_instNo')||0)+1));lsSet('ia_instNoAt',lsGet('ia_g')||'0');$('#instRow').classList.add('hidden')};
+ $('#instOk').onclick=()=>$('#instHelp').classList.add('hidden');
+ /* first launch from the home-screen icon: one-time thank-you coins */
+ if(!NATIVE&&standalone()&&!lsGet('ia_instBonus')){lsSet('ia_instBonus','1');lsSet('ia_inst','1');prof.coins+=100;saveProf();const h=$('#instHelp');h.querySelector('h2').textContent='📲 YOU\'RE IN';h.querySelector('.tag').textContent='Home-screen bonus: +100 🌙 added. One tap from now on, so come back tomorrow and keep that streak alive.';h.querySelector('ol').remove();$('#instNote').remove();$('#instOk').textContent='LET\'S GO';h.classList.remove('hidden');try{snd('coin')}catch(e){}}
+ return{onOver};
 })();
 applyTheme();renderCoins();renderToggles();renderDaily();renderPCard();menuLine();resize();requestAnimationFrame(loop);initDb();
 })();

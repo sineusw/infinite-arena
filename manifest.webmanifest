@@ -1,0 +1,17 @@
+{
+  "name": "99% Impossible: Infinite Arena",
+  "short_name": "Infinite Arena",
+  "description": "Dodge everything, grab the orbs, beat the bosses. 99% of players fold.",
+  "id": "/app",
+  "start_url": "/app",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#07080f",
+  "theme_color": "#12082e",
+  "categories": ["games"],
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
