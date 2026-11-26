@@ -338,6 +338,7 @@ body.onmenu #hud,body.onmenu #info{display:none!important}
      <div id="rankBox"></div>
      <button class="big" id="again">PLAY AGAIN</button>
      <div class="row2"><button class="sec" id="shareBtn">📣 Challenge a friend</button><button class="sec" id="cardBtn">🖼️ Score card</button></div>
+     <button class="sec hidden" id="clipBtn" style="margin-top:8px">🎬 Death replay clip</button>
      <textarea id="shareTxt" class="hidden" readonly></textarea>
      <div class="row2 hidden" id="instRow"><button class="sec" id="instBtn">📲 Add to Home Screen · +100 🌙</button><button class="sec" id="instNo" style="flex:0 0 44px" aria-label="Not now">✕</button></div>
      <div class="row2"><button class="sec" id="overMenu">Menu</button><button class="sec" id="overShop">🛒 Shop</button><button class="sec" id="overLb">🏆 Board</button></div>
@@ -752,7 +753,7 @@ function startGame(mode){
  try{Petty.leave()}catch(e){}
  mode=MODES[mode]?mode:selMode;
  if(!lsGet('ia_tut')){startTutorial();return}
- G=newG();G.mode=mode;joyShow();resize();P.x=W/2;P.y=H/2;lastHud='';ptr=null;track('games',1);
+ G=newG();G.mode=mode;try{Clip.reset()}catch(e){}joyShow();resize();P.x=W/2;P.y=H/2;lastHud='';ptr=null;track('games',1);
  R=Math.random;if(mode==='daily')G.twist=todayTwist().k;
  if(upLvl('shield'))G.shield=true;if(upLvl('heart'))G.lives=4;
  hideOverlays();$('#skipTut').classList.add('hidden');
@@ -1193,7 +1194,7 @@ function finishGame(){
   $('#coinMsg').textContent=(earned+dailyBonus)?'+'+(earned+dailyBonus)+' 🌙 Moon Coins'+(dailyBonus?' (incl. +50 daily bonus)':'')+'  ·  You have '+prof.coins.toLocaleString():'';
   $('#xpMsg').textContent='+'+xpGain+' XP'+(after>before?'  ·  🎉 LEVEL UP! Lv '+after+' '+titleFor(after)+' · +'+lvlCoins+' 🌙':'');if(after>before){snd('fanfare');buzz([40,40,40,40,120])}
   $('#shareBtn').textContent=CH&&mode===CH.m?'⚔️ Send a challenge back to '+CH.n:'📣 Challenge a friend';$('#shareTxt').classList.add('hidden');$('#cardBtn').textContent='🖼️ Score card';renderPCard();
-  $('#over').classList.remove('hidden');renderOverRank();try{Inst.onOver()}catch(e){}
+  $('#over').classList.remove('hidden');renderOverRank();try{Inst.onOver()}catch(e){}try{Clip.onOver()}catch(e){}
   const prevBest=bests[mode]?Object.assign({},bests[mode]):null;
   submitScore(mode,metric,G.level,G.bossKills);
   try{Petty.result(mode,metric,prevBest)}catch(e){}
@@ -1743,7 +1744,7 @@ function loop(now){if(joyEl)joyShow();
  if(!paused&&$('#shop').classList.contains('hidden'))update(dt);
  if(G&&G.mode==='survival')hud();
  musicTick();joyShow();if(!joyEl.classList.contains('hidden'))knobTick(dt);
- draw(now);renderChips();renderInfo();
+ draw(now);try{Clip.tick(now)}catch(e){}renderChips();renderInfo();
  requestAnimationFrame(loop);
 }
 
@@ -1790,6 +1791,62 @@ $('#cardBtn').onclick=()=>{
   const url=GAME_URL+(!window.claude&&metricOf()>0?(NATIVE||location.hostname.endsWith('.vercel.app')?'/c':'/')+'?vs='+encodeURIComponent(playerName())+'&m='+G.mode+'&s='+metricOf()+'&utm_source=card':'');
   if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],text:'Beat me in 99% Impossible: Infinite Arena '+url}).then(()=>{$('#cardBtn').textContent='✅ Shared!'},()=>{});return}
   const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=f.name;document.body.appendChild(a);a.click();a.remove();$('#cardBtn').textContent='✅ Saved!';setTimeout(()=>URL.revokeObjectURL(a.href),4000)},'image/png')};
+/* Death replay clip: keeps the last ~6s of the run as small frames (cheap drawImage 10x/sec); on game over it can turn them
+   into a 720x1280 video (last second in slow-mo + score card end frame) to share on TikTok/Stories/group chats. */
+const Clip=(()=>{
+ const FPS=10,N=60,ok=!NATIVE&&typeof MediaRecorder!=='undefined'&&!!(HTMLCanvasElement.prototype.captureStream);
+ let ring=[],head=0,count=0,lastT=0,overT=0,cw=0,ch=0,job=0,blob=null,file=null;
+ function mime(){for(const m of['video/mp4;codecs=avc1','video/mp4','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm']){try{if(MediaRecorder.isTypeSupported(m))return m}catch(e){}}return''}
+ function reset(){head=0;count=0;overT=0;job++;blob=null;file=null}
+ function tick(now){
+  if(!ok||!G||G.tutorial||paused||G.phase==='prompt')return;
+  if(G.phase==='over'){if(!overT)overT=now;if(now-overT>700)return}else overT=0;
+  if(now-lastT<1000/FPS)return;lastT=now;
+  const w=LOWFX?240:300,h=Math.max(1,Math.round(w*cv.height/Math.max(1,cv.width)));
+  if(w!==cw||h!==ch){ring=[];cw=w;ch=h;head=0;count=0}
+  let c=ring[head];if(!c){c=document.createElement('canvas');c.width=w;c.height=h;ring[head]=c}
+  try{c.getContext('2d').drawImage(cv,0,0,w,h)}catch(e){return}
+  head=(head+1)%N;count=Math.min(N,count+1)}
+ function make(prog){return new Promise((res,rej)=>{
+  const fr=[];for(let i=0;i<count;i++)fr.push(ring[(head-count+i+N)%N]);
+  const m=mime();if(fr.length<12||!m)return rej('na');
+  const my=++job,O=document.createElement('canvas');O.width=720;O.height=1280;const x=O.getContext('2d');
+  let st,rec;try{st=O.captureStream(30);rec=new MediaRecorder(st,{mimeType:m,videoBitsPerSecond:3000000})}catch(e){return rej(e)}
+  const chunks=[];rec.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
+  rec.onstop=()=>{try{st.getTracks().forEach(t=>t.stop())}catch(e){}if(my!==job)return rej('cancel');res(new Blob(chunks,{type:m.split(';')[0]}))};
+  let card=null;try{card=makeCard()}catch(e){}
+  const SL=12,seq=fr.map((f,i)=>[f,i>=fr.length-SL?250:100]),playMs=seq.reduce((a,b)=>a+b[1],0),END=2300,total=playMs+END;
+  const sc=Math.min(720/cw,900/ch),dw=cw*sc,dh=ch*sc,dx=(720-dw)/2,dy=180+(900-dh)/2,v=metricOf(),md=G.mode;
+  const txt=(t,f,c,y)=>{x.font=f;x.fillStyle=c;x.fillText(t,360,y)};
+  function frame(el){
+   x.fillStyle='#0b0e22';x.fillRect(0,0,720,1280);x.textAlign='center';
+   if(el<playMs){let k=0,acc=0;while(k<seq.length-1&&acc+seq[k][1]<=el){acc+=seq[k][1];k++}
+    x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';x.drawImage(seq[k][0],dx,dy,dw,dh);
+    x.strokeStyle='#7c5cff';x.lineWidth=4;x.strokeRect(dx,dy,dw,dh);
+    txt('99% IMPOSSIBLE','900 54px system-ui,sans-serif','#fff',90);txt('INFINITE ARENA','700 30px system-ui,sans-serif','#9aa4ff',138);
+    if(k>=seq.length-SL){x.globalAlpha=.6+.4*Math.sin(el/90);txt('⏪ SLOW-MO','900 44px system-ui,sans-serif','#ff3d6e',dy+70);x.globalAlpha=1}
+    txt((md==='boss'?G.bossKills+(G.bossKills===1?' boss':' bosses'):fmtMetric(md,v)+(md==='survival'?'':' pts'))+'  ·  '+playerName(),'800 46px system-ui,sans-serif','#ffd54a',1170);
+    txt('Beat me → '+GAME_URL.replace(/^https?:\/\//,''),'600 30px system-ui,sans-serif','#c9cdf5',1230);
+   }else{const a=Math.min(1,(el-playMs)/300);x.globalAlpha=1-a*.75;x.drawImage(seq[seq.length-1][0],dx,dy,dw,dh);x.globalAlpha=a;
+    if(card)x.drawImage(card,0,190,720,900);else txt(fmtMetric(md,v),'900 160px system-ui,sans-serif','#fff',640);
+    x.globalAlpha=1}
+  }
+  const t0=performance.now();frame(0);rec.start(500);
+  (function step(){if(my!==job){try{rec.stop()}catch(e){}return}
+   const el=performance.now()-t0;frame(Math.min(el,total));if(prog)prog(Math.min(99,Math.round(el/total*100)));
+   if(el>=total+120){try{rec.stop()}catch(e){}return}requestAnimationFrame(step)})();
+ })}
+ const btn=$('#clipBtn');
+ function onOver(){blob=null;file=null;if(ok&&count>=12&&mime()){btn.textContent='🎬 Death replay clip';btn.disabled=false;btn.classList.remove('hidden')}else btn.classList.add('hidden')}
+ btn.onclick=()=>{
+  if(file){const url=GAME_URL+(!window.claude&&metricOf()>0?(location.hostname.endsWith('.vercel.app')?'/c':'/')+'?vs='+encodeURIComponent(playerName())+'&m='+G.mode+'&s='+metricOf()+'&utm_source=clip':'');
+   if(navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({files:[file],text:'99% Impossible… watch me almost make it 💀 Beat me: '+url}).then(()=>{btn.textContent='✅ Clip shared!'},()=>{});return}
+   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=file.name;document.body.appendChild(a);a.click();a.remove();btn.textContent='✅ Clip saved!';setTimeout(()=>URL.revokeObjectURL(a.href),8000);return}
+  if(btn.disabled||!G)return;btn.disabled=true;btn.textContent='🎬 Making your clip… 0%';
+  make(p=>{btn.textContent='🎬 Making your clip… '+p+'%'}).then(b=>{blob=b;file=new File([b],'infinite-arena-clip.'+(b.type.includes('mp4')?'mp4':'webm'),{type:b.type});btn.disabled=false;btn.textContent=TOUCH&&navigator.share?'📤 Share your clip':'💾 Download your clip';snd('coin');buzz([20,30,20])},
+   e=>{btn.disabled=false;if(e!=='cancel')btn.classList.add('hidden')})};
+ return{tick,reset,onOver}
+})();
 $('#again').onclick=()=>{startGame(G&&G.mode?G.mode:selMode)};
 function renderPCard(){
  const li=lvlInfo(prof.xp),box=$('#pcard');box.innerHTML='';
