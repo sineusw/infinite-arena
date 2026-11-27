@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Sitemap: https://infinite-arena-ten.vercel.app/sitemap.xml
