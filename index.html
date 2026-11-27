@@ -23,6 +23,8 @@
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://infinite-arena-ten.vercel.app/og.jpg">
+<link rel="canonical" href="https://infinite-arena-ten.vercel.app/">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"99 Percent Impossible: Infinite Arena","url":"https://infinite-arena-ten.vercel.app/","image":"https://infinite-arena-ten.vercel.app/og.jpg","description":"A free browser arcade dodge game. Dodge everything, grab the orbs, beat 8 bosses, chain close calls and climb the online leaderboards. Plays on phone and desktop, no download.","genre":["Arcade","Action","Bullet hell"],"gamePlatform":["Web browser","iPhone","Android"],"applicationCategory":"Game","operatingSystem":"Any","playMode":"SinglePlayer","isAccessibleForFree":true,"publisher":{"@type":"Organization","name":"Petty Games Studio"},"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -114,6 +116,8 @@ input:focus{border-color:var(--cyan)}
 .mis{display:flex;align-items:center;gap:8px;font-size:13px;padding:4px 0}
 .mis .t{flex:1}.mis.done .t{color:var(--pu);text-decoration:line-through}
 .mis .bar{width:64px;height:6px;background:#1a1f3a;border-radius:9px;overflow:hidden}.mis .bar i{display:block;height:100%;background:var(--pu)}
+.ach{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 4px}.ach .bd{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;background:#141833;border:2px solid #262c52;filter:grayscale(1);opacity:.45}
+.ach .bd.t1{border-color:#c98a4b;filter:none;opacity:1}.ach .bd.t2{border-color:#d8e0f0;filter:none;opacity:1;box-shadow:0 0 6px #d8e0f088}.ach .bd.t3{border-color:#ffd23f;filter:none;opacity:1;box-shadow:0 0 10px #ffd23faa}
 .mis .rw{font-size:12px;color:#ffe7a0;white-space:nowrap;min-width:46px;text-align:right}
 .trophies{display:flex;justify-content:space-between;gap:2px}.tro{width:36px;height:36px;overflow:hidden;border-radius:8px;background:#11152b;display:flex;align-items:center;justify-content:center}
 #joy{height:170px;flex:none;display:flex;align-items:center;justify-content:center;background:#0a0d1b;border-top:1px solid var(--line);touch-action:none;position:relative;user-select:none;-webkit-user-select:none}
@@ -248,6 +252,7 @@ body.onmenu #hud,body.onmenu #info{display:none!important}
 <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
+<noscript><h1>99 Percent Impossible: Infinite Arena</h1><p>A free arcade dodge game you play in your browser. Dodge enemies, grab orbs, beat bosses, chain close calls and climb the leaderboards in Classic, Survival, Boss Rush, Daily and Weekly modes. Turn on JavaScript to play.</p></noscript>
 <div id="app">
  <div id="stage">
   <div id="hud">
@@ -583,13 +588,41 @@ function ensureMissions(){
  prof.missions={day:today,list};
 }
 function track(k,val){
- if(!G||G.tutorial)return;ensureMissions();
+ if(!G||G.tutorial)return;try{Ach.track(k,val)}catch(e){}ensureMissions();
  prof.missions.list.forEach(m=>{
   if(m.k!==k||m.done)return;const d=MIS_BY[k];
   m.prog=d.max?Math.max(m.prog,val):m.prog+val;
   if(m.prog>=d.goal){m.done=true;m.prog=d.goal;prof.coins+=d.reward;saveProf();snd('coin');buzz([20,30,20]);setMsg('✅ Mission done: '+d.text+'! +'+d.reward+' 🌙','good',3)}
  });
 }
+/* ===== Badges: lifetime achievements in 3 tiers (Bronze/Silver/Gold), stored locally in ia_ach ===== */
+const ACH=[
+ {k:'games',g:[10,50,250],n:'Regular',ic:'🎮',t:'Play {g} games'},
+ {k:'orbs',g:[150,1500,10000],n:'Orb Hoarder',ic:'🟡',t:'Grab {g} orbs'},
+ {k:'near',g:[50,500,3000],n:'Thrill Seeker',ic:'😱',t:'Get {g} close calls'},
+ {k:'boss',g:[1,10,50],n:'Boss Hunter',ic:'👑',t:'Beat {g} boss{es}'},
+ {k:'pu',g:[20,200,1000],n:'Powered Up',ic:'⚡',t:'Grab {g} power-ups'},
+ {k:'dodge',g:[5,50,300],n:'Curse Breaker',ic:'🟪',t:'Outlast {g} curses'},
+ {k:'combo',g:[8,15,25],max:1,n:'Combo Artist',ic:'🔥',t:'Reach a x{g} combo'},
+ {k:'level',g:[10,18,30],max:1,n:'Deep Diver',ic:'🌀',t:'Reach level {g} in Classic'},
+ {k:'survive',g:[120,300,600],max:1,time:1,n:'Unkillable',ic:'⏱️',t:'Last {g} in Survival'},
+ {k:'chain',g:[5,8,12],max:1,n:'Daredevil',ic:'😈',t:'Chain {g} close calls in one run'},
+ {k:'streak',g:[3,7,30],max:1,n:'Loyal',ic:'📅',t:'Play {g} days in a row'}
+];
+const ACH_TIER=['','Bronze','Silver','Gold'],ACH_RW=[0,75,200,500];
+const Ach=(()=>{let d;try{d=JSON.parse(lsGet('ia_ach')||'{}')}catch(e){d={}}if(!d||typeof d!=='object')d={};d.c=d.c&&typeof d.c==='object'?d.c:{};d.t=d.t&&typeof d.t==='object'?d.t:{};
+ const save=()=>lsSet('ia_ach',JSON.stringify(d));
+ const tier=a=>Math.max(0,Math.min(3,Math.floor(Number(d.t[a.k])||0))),val=a=>Math.max(0,Number(d.c[a.k])||0);
+ const goalTxt=(a,i)=>{const g=a.g[Math.min(i,2)];return a.t.replace('{g}',a.time?fmtTime(g):g.toLocaleString()).replace('{es}',g>1?'es':'')};
+ function check(a,quiet){let t=tier(a),got=0;while(t<3&&val(a)>=a.g[t]){t++;got+=ACH_RW[t];d.t[a.k]=t;
+   if(!quiet&&G){(G.newAch=G.newAch||[]).push(a.ic+' '+a.n+' '+ACH_TIER[t]);setMsg('🏅 BADGE: '+a.n+' ('+ACH_TIER[t]+')! +'+ACH_RW[t]+' 🌙','good',3);try{pop(P.x,P.y-56,'🏅 '+a.n.toUpperCase()+'!',T.pu)}catch(e){}snd('fanfare');buzz([20,30,20,30,60])}}
+  if(got){prof.coins+=got;saveProf();save()}return got}
+ return{
+  track(k,v){const a=ACH.find(x=>x.k===k);if(!a)return;v=Number(v)||0;const o=val(a);d.c[k]=a.max?Math.max(o,v):o+v;if(d.c[k]!==o)save();check(a)},
+  sync(){ACH.forEach(a=>check(a,true))},
+  count(){return ACH.reduce((n,a)=>n+tier(a),0)},total:ACH.length*3,tier,val,goalTxt,
+  next(){return ACH.filter(a=>tier(a)<3).map(a=>({a,p:val(a)/a.g[tier(a)]})).sort((x,y)=>y.p-x.p)}
+ }})();
 function renderDaily(){
  ensureMissions();
  const box=$('#daily');box.innerHTML='';
@@ -599,6 +632,10 @@ function renderDaily(){
   row.appendChild(el('span','rw',m.done?'Done':'+'+d.reward+' 🌙'));box.appendChild(row)});
  const th=el('h4');th.style.marginTop='10px';th.append(el('span','','👑 Boss trophies'),el('span','',prof.trophies.length+'/'+BOSS_KEYS.length));box.appendChild(th);
  const tr=el('div','trophies');BOSS_KEYS.forEach(k=>{const w=el('div','tro');w.title=prof.trophies.includes(k)?BOSS_TYPES[k].name:'???';w.appendChild(bossPortrait(k,34,prof.trophies.includes(k)));tr.appendChild(w)});box.appendChild(tr);
+ try{const bh=el('h4');bh.style.marginTop='10px';bh.append(el('span','','🏅 Badges'),el('span','',Ach.count()+'/'+Ach.total));box.appendChild(bh);
+  const ag=el('div','ach');ACH.forEach(a=>{const t=Ach.tier(a),b=el('div','bd t'+t,a.ic);b.title=a.n+(t?' · '+ACH_TIER[t]:'')+' · '+(t<3?'Next: '+Ach.goalTxt(a,t):'Maxed');ag.appendChild(b)});box.appendChild(ag);
+  Ach.next().slice(0,2).forEach(({a,p})=>{const t=Ach.tier(a),row=el('div','mis');row.appendChild(el('span','t',a.ic+' '+Ach.goalTxt(a,t)+(a.max?'':' ('+Math.floor(Ach.val(a)).toLocaleString()+')')));
+   const bar=el('span','bar'),i=el('i');i.style.width=Math.min(100,p*100)+'%';bar.appendChild(i);row.appendChild(bar);row.appendChild(el('span','rw','+'+ACH_RW[t+1]+' 🌙'));box.appendChild(row)})}catch(e){}
  const cb=$('#claimBtn'),today=dayStr();
  if(prof.daily.last!==today){const st=prof.daily.last===yesterday()?prof.daily.streak+1:1;cb.textContent='🎁 Claim daily reward: +'+dailyReward(st)+' 🌙'+(st>1?'  (Day '+st+' streak!)':'');cb.classList.remove('hidden')}
  else cb.classList.add('hidden');
@@ -753,7 +790,7 @@ function startGame(mode){
  try{Petty.leave()}catch(e){}
  mode=MODES[mode]?mode:selMode;
  if(!lsGet('ia_tut')){startTutorial();return}
- G=newG();G.mode=mode;try{Clip.reset()}catch(e){}joyShow();resize();P.x=W/2;P.y=H/2;lastHud='';ptr=null;track('games',1);
+ G=newG();G.mode=mode;try{Clip.reset()}catch(e){}joyShow();resize();P.x=W/2;P.y=H/2;lastHud='';ptr=null;track('games',1);try{Ach.track('streak',(prof.daily&&prof.daily.last===dayStr())?prof.daily.streak:0)}catch(e){}
  R=Math.random;if(mode==='daily')G.twist=todayTwist().k;
  if(upLvl('shield'))G.shield=true;if(upLvl('heart'))G.lives=4;
  hideOverlays();$('#skipTut').classList.add('hidden');
@@ -1175,6 +1212,8 @@ function showClose(mode,metric,prevBest){
  const li=lvlInfo(prof.xp),left=li.need-li.into;if(left/li.need<=.3)out.push('⭐ '+left.toLocaleString()+' XP to Lv '+(li.l+1)+'. One more run!');
  if(CH&&mode===CH.m){if(metric>CH.s)out.unshift('🏆 You beat '+CH.n+'\u2019s '+fmtMetric(mode,CH.s)+'! Send it back ⚔️');else out.unshift('⚔️ '+fmtMetric(mode,CH.s-metric)+(mode==='survival'?'':' pts')+' short of '+CH.n+'. Again!')}
  if(G.ncBest>=5)out.push('😈 '+G.ncBest+' close calls in a row!');
+ try{if(G.newAch&&G.newAch.length)out.unshift('🏅 New badge'+(G.newAch.length>1?'s':'')+': '+G.newAch.slice(0,2).join(', ')+'!');
+  else{const nx=Ach.next().find(x=>x.p>=.75&&x.p<1);if(nx){const a=nx.a,t=Ach.tier(a);out.push('🏅 Almost there: '+Ach.goalTxt(a,t)+' for '+a.n+' '+ACH_TIER[t+1])}}}catch(e){}
  box.textContent=out.slice(0,2).join('  ·  ');box.classList.toggle('hidden',!out.length);
 }
 function finishGame(){
@@ -1321,7 +1360,7 @@ function nearCheck(e){
  if(e.nm&&G.clock<e.nm)return;
  const g=dist(P.x,P.y,e.x,e.y)-(P.r+e.r);
  if(g>0&&g<9){e.nm=G.clock+1.5;G.nc=(G.ncT>0?(G.nc||0):0)+1;G.ncT=2.5;G.ncBest=Math.max(G.ncBest||0,G.nc);
-  const c=G.nc,v=addScore(5*G.level*Math.min(c,10));pop(P.x,P.y-18,(g<4?'RAZOR!':'CLOSE!')+(c>1?' x'+c:'')+' +'+v,c>=3?T.pu:T.orb);snd('near');buzz(c>=3?8+c*2:8);track('near',1);
+  const c=G.nc,v=addScore(5*G.level*Math.min(c,10));pop(P.x,P.y-18,(g<4?'RAZOR!':'CLOSE!')+(c>1?' x'+c:'')+' +'+v,c>=3?T.pu:T.orb);snd('near');buzz(c>=3?8+c*2:8);track('near',1);if(c>=5)track('chain',c);
   if(c===3||c===5||c===8||c===12){const t=c>=12?'UNTOUCHABLE':c>=8?'MADMAN':c>=5?'DAREDEVIL':'RISKY';pop(P.x,P.y-40,t+' x'+c+'!',T.pu);snd('fanfare');buzz([15,20,15,20,40]);G.flash=.12;burst(P.x,P.y,T.pu,14+c*2,200)}
   if(g<4)slowMo()}
 }
